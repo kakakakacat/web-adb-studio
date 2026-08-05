@@ -15,7 +15,7 @@
 
         <provider
             android:name=".IconContentProvider"
-            android:authorities="com.deepmirror.iconhelper.icons"
+            android:authorities="kakacat.icu.iconhelper.icons"
             android:exported="true" />
     </application>
 

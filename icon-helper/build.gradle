@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace 'com.deepmirror.iconhelper'
+    namespace 'kakacat.icu.iconhelper'
     compileSdk 36
 
     defaultConfig {
-        applicationId 'com.deepmirror.iconhelper'
+        applicationId 'kakacat.icu.iconhelper'
         minSdk 24
         targetSdk 34
         versionCode 1

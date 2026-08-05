@@ -2,8 +2,8 @@
 # Stage the two binary assets the web app serves from its own origin:
 #
 #   public/scrcpy-server    the scrcpy server jar, pushed to the device to mirror
-#   public/icon-helper.apk  the DeepMirror icon helper, installed on demand to
-#                           read fully-resolved launcher icons
+#   public/icon-helper.apk  the icon helper (../icon-helper), installed on demand
+#                           to read fully-resolved launcher icons
 #
 # Unlike the native builds there are no sidecars to fetch: adb itself is gone,
 # reimplemented in the browser by Tango. These two are the only leftovers.
@@ -29,14 +29,20 @@ else
 fi
 
 # --- icon helper APK ---
-# Committed in the native app's resources; copy it rather than rebuilding.
-HELPER_SRC="../tauri-app/src-tauri/resources/icon-helper.apk"
-if [ -f "$HELPER_SRC" ]; then
-  cp "$HELPER_SRC" "$DEST/icon-helper.apk"
-  echo "Copied icon-helper.apk from the native app resources."
+# 从源码构建（../icon-helper）。原来是从原生应用的 resources 里复制一份预编译产物，
+# 那个目录已经不存在了；从源码出的好处是包名/权限这类改动不会和产物脱节。
+#
+# 需要 Android SDK（icon-helper/local.properties 里的 sdk.dir，或者 ANDROID_HOME）。
+# 没有也能用：图标会退回到设备上直接扫 APK 的路径 —— 能work，但拿不到自适应图标。
+HELPER_APK="../icon-helper/build/outputs/apk/release/icon-helper-release.apk"
+if [ -f "$DEST/icon-helper.apk" ]; then
+  echo "icon-helper.apk already staged; delete it to rebuild."
+elif (cd ../icon-helper && ./gradlew --quiet assembleRelease) 2>/dev/null && [ -f "$HELPER_APK" ]; then
+  cp "$HELPER_APK" "$DEST/icon-helper.apk"
+  echo "Built icon-helper.apk from source."
 else
-  echo "WARN: $HELPER_SRC not found — app icons will fall back to the on-device"
-  echo "      APK scan (works, but misses adaptive icons)."
+  echo "WARN: 构建 icon-helper 失败（缺 Android SDK？）—— 应用图标会退回到设备端"
+  echo "      扫 APK 的方式，功能可用但拿不到自适应图标。"
 fi
 
 echo "Assets staged: $(ls "$DEST" | tr '\n' ' ')"

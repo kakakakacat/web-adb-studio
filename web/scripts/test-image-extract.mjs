@@ -61,7 +61,7 @@ check("WebP after noise is located", findImageStart(concat(NOISE, WEBP)) === NOI
 
 // Must still reject genuine failures, or a provider error becomes a broken icon.
 const providerError = new TextEncoder().encode(
-  "Error while accessing provider:com.deepmirror.iconhelper.icons\n"
+  "Error while accessing provider:kakacat.icu.iconhelper.icons\n"
 );
 check("provider error is not an image", extractImage(providerError) === undefined);
 check("empty output is not an image", extractImage(new Uint8Array()) === undefined);

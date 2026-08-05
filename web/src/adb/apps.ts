@@ -124,8 +124,8 @@ export async function appSetEnabled(
 
 // --- launcher icons -------------------------------------------------------
 
-const ICON_HELPER_AUTHORITY = "com.deepmirror.iconhelper.icons";
-const ICON_HELPER_PACKAGE = "com.deepmirror.iconhelper";
+const ICON_HELPER_AUTHORITY = "kakacat.icu.iconhelper.icons";
+const ICON_HELPER_PACKAGE = "kakacat.icu.iconhelper";
 /** Served from web/public/ — the same APK the native app bundled as a resource. */
 const ICON_HELPER_URL = "/icon-helper.apk";
 

@@ -1,4 +1,4 @@
-package com.deepmirror.iconhelper
+package kakacat.icu.iconhelper
 
 import android.content.ComponentName
 import android.content.ContentProvider
@@ -19,7 +19,7 @@ import kotlin.concurrent.thread
  * Headless helper that exposes any installed app's launcher icon as a PNG so a desktop tool
  * (ADB Studio) can read it over adb without depending on the DeepMirror launcher process:
  *
- *     adb exec-out content read --uri content://com.deepmirror.iconhelper.icons/<packageName>
+ *     adb exec-out content read --uri content://kakacat.icu.iconhelper.icons/<packageName>
  *
  * Optional `?size=<px>` sets the output edge length (default [DEFAULT_SIZE]).
  *
@@ -33,7 +33,7 @@ import kotlin.concurrent.thread
 class IconContentProvider : ContentProvider() {
 
     companion object {
-        const val AUTHORITY = "com.deepmirror.iconhelper.icons"
+        const val AUTHORITY = "kakacat.icu.iconhelper.icons"
         private const val TAG = "IconHelper"
 
         private const val DEFAULT_SIZE = 192

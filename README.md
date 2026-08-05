@@ -8,9 +8,9 @@
 需要支持 WebUSB 的浏览器（Chrome / Edge），且页面必须是 HTTPS 或 localhost。
 Safari 和 Firefox 不支持 WebUSB。
 
-> 项目起源于 [Zaphkiel-Ivanovna/adb-studio](https://github.com/Zaphkiel-Ivanovna/adb-studio)
-> 的 fork（一个原生 macOS 应用）。浏览器版是重写的：ADB 协议改由页面实现，原生壳、
-> 打包脚本和捆绑的二进制全部去掉。上游的版权声明保留在 [LICENSE](LICENSE) 中。
+> 功能上参考了 [Zaphkiel-Ivanovna/adb-studio](https://github.com/Zaphkiel-Ivanovna/adb-studio)
+> （一个原生 macOS 应用），代码是独立实现：ADB 协议在浏览器里跑，没有原生壳、
+> 没有捆绑二进制。
 
 ## 能做什么
 

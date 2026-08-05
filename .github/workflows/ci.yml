@@ -1,0 +1,43 @@
+name: CI
+
+# 原来这里跑的是 xcodebuild + SwiftLint（原生 macOS 应用）。浏览器版没有 Swift 代码，
+# 该跑的是：前端类型检查与构建、两个 Rust crate 的编译检查。
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  web:
+    name: 前端（typecheck + build）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+        working-directory: web
+      # 不跑 npm run assets：那会去 GitHub Releases 拉 scrcpy-server，CI 里没必要，
+      # 而且 build 不依赖它（只有运行期投屏才需要）。
+      - run: npm run typecheck
+        working-directory: web
+      - run: npx vite build
+        working-directory: web
+
+  rust:
+    name: Rust（server + bridge）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            server
+            bridge
+      - run: cargo check --manifest-path server/Cargo.toml
+      - run: cargo check --manifest-path bridge/Cargo.toml
+      - run: cargo clippy --manifest-path bridge/Cargo.toml -- -D warnings

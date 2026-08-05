@@ -1,0 +1,30 @@
+[package]
+name = "adbstudio-bridge"
+version = "1.0.0"
+edition = "2021"
+license = "MIT"
+description = "WebSocket-to-TCP relay so the ADB Studio web app can share a device with a running adb server"
+
+# Deliberately NOT part of the server crate, and deliberately tiny.
+#
+# Two reasons. This binary is handed to users, and the server carries an SSH
+# client, a gRPC stack and TLS — none of which a relay needs, and none of which
+# belong on someone else's laptop. And every one of those pulls a C dependency
+# (protoc at build time, ring/aws-lc at link time), which is what turns
+# cross-compiling for three platforms from an afternoon into a week.
+#
+# Everything here is pure Rust, so one `cargo zigbuild --target …` per platform
+# is the whole build.
+[dependencies]
+axum = { version = "0.7", features = ["ws"] }
+tokio = { version = "1", features = ["rt-multi-thread", "net", "macros", "io-util", "signal"] }
+tower-http = { version = "0.5", features = ["cors"] }
+futures-util = "0.3"
+serde_json = "1"
+
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"

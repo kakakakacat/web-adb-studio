@@ -1,0 +1,119 @@
+# Build the standalone bridge for the three platforms people actually use.
+#
+# Native runners rather than cross-compiling: the dev machine has no mingw, no
+# musl toolchain and no Docker, and installing all three to produce two binaries
+# is more moving parts than a matrix of runners GitHub already maintains.
+#
+# Linux is built against musl, not glibc. The stated floor is Ubuntu 18.04, whose
+# glibc is 2.27 — older than any current runner's — so a glibc build would refuse
+# to start there with a version error. A static musl binary has no such link and
+# runs on anything with a Linux kernel. It is only possible because the bridge is
+# pure Rust; the main server, with its gRPC and SSH stacks, could not do this.
+
+name: bridge
+
+on:
+  push:
+    tags: ["bridge-v*"]
+    paths: ["bridge/**", ".github/workflows/bridge.yml"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14 # Apple Silicon runner
+            target: aarch64-apple-darwin
+            name: adbstudio-bridge-macos-arm64
+            bin: adbstudio-bridge
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            name: adbstudio-bridge-linux-x64
+            bin: adbstudio-bridge
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            name: adbstudio-bridge-windows-x64.exe
+            bin: adbstudio-bridge.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the Rust target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: musl linker
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - name: Build
+        working-directory: bridge
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Check it starts and answers
+        working-directory: bridge
+        shell: bash
+        run: |
+          # A binary that builds but won't run is the failure this catches — a
+          # missing shared library, or the wrong architecture. There is no adb
+          # and no device on a runner, so only the relay itself is exercised:
+          # it must come up, serve /api/health, and report the adb server as
+          # unreachable rather than pretending.
+          BIN="target/${{ matrix.target }}/release/${{ matrix.bin }}"
+          "$BIN" --help
+          "$BIN" --port 7099 &
+          PID=$!
+          # Poll rather than sleep a fixed amount: a fixed wait is either flaky
+          # or slow, and this also proves the port opens promptly instead of
+          # after some background work finishes.
+          for i in $(seq 1 20); do
+            BODY=$(curl -fsS http://127.0.0.1:7099/api/health 2>/dev/null) && break
+            sleep 0.5
+          done
+          echo "$BODY"
+          echo "$BODY" | grep -q '"bridge":true'
+          echo "$BODY" | grep -q '"adbServer":false'
+          kill $PID 2>/dev/null || true
+
+      - name: Name it for humans
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp "bridge/target/${{ matrix.target }}/release/${{ matrix.bin }}" "dist/${{ matrix.name }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: dist/${{ matrix.name }}
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/bridge-v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - run: ls -lh dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          body: |
+            本机 adb 桥接 — 让网页版和 Android Studio 同时使用一台设备。
+
+            下载对应平台的文件，运行它，然后在网页里点右上角齿轮 →「用本机桥接」。
+
+            | 平台 | 文件 |
+            | --- | --- |
+            | macOS (Apple Silicon) | `adbstudio-bridge-macos-arm64` |
+            | Linux x64 (Ubuntu 18.04+) | `adbstudio-bridge-linux-x64` |
+            | Windows 10+ | `adbstudio-bridge-windows-x64.exe` |
+
+            macOS 和 Linux 首次运行前需要 `chmod +x`。macOS 还会因为未签名而拦截，
+            右键点「打开」，或执行 `xattr -d com.apple.quarantine <文件>`。

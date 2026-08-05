@@ -1,0 +1,38 @@
+[package]
+name = "adbstudio-web-server"
+version = "2.0.0"
+edition = "2021"
+license = "MIT"
+
+# The small backend for the web build. Everything a browser CAN do (talking ADB
+# to a USB device, mirroring, installing APKs) happens in the page via WebUSB;
+# this server exists only for the four things a browser physically cannot do:
+#
+#   * SFTP  — "Server Files" against the internal NAS (browsers can't SSH)
+#   * gRPC  — Dino admin on plaintext h2c (browsers only speak gRPC-Web)
+#   * TCP   — a WebSocket↔TCP relay to a real adb server, which is what gives us
+#             back wireless devices and mDNS discovery
+#   * static hosting of the built frontend
+#
+# It is also where the SSH private key now lives: exactly one copy, on a server,
+# instead of one embedded in every client build.
+
+[dependencies]
+axum = { version = "0.7", features = ["ws"] }
+# Serves HTTPS directly. Needed when a browser on a *different* origin talks to
+# this server: the page is loaded over HTTPS, so calling a plain-http backend is
+# blocked as mixed content. See DEPLOY-REMOTE.md.
+axum-server = { version = "0.7", features = ["tls-rustls"] }
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["io"] }
+tower-http = { version = "0.5", features = ["fs", "trace", "cors"] }
+futures-util = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dirs = "5"
+
+
+[profile.release]
+strip = true

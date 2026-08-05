@@ -1,0 +1,6 @@
+# Cloudflare 会在这份文件后面追加它托管的那段（AI 爬虫的 Content-Signal 规则），
+# 所以这里只声明我们自己的部分：全站可收录 + sitemap 位置。
+User-agent: *
+Allow: /
+
+Sitemap: https://adb.kakacat.icu/sitemap.xml

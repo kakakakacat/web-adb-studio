@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Inline so there's no extra request (and no 404 for /favicon.ico). -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f8b7e'/%3E%3Crect x='9' y='7' width='14' height='18' rx='2.5' fill='%23fff'/%3E%3Crect x='11' y='10' width='10' height='10' fill='%230f8b7e'/%3E%3C/svg%3E"
+    />
+
+    <!-- SEO ------------------------------------------------------------------
+      标题写「网页版 ADB」而不是单纯的产品名：会搜过来的人不知道这个工具叫什么，
+      他们搜的是想做的事（浏览器里用 adb / 不装 adb 投屏 / 安卓抓包）。
+    -->
+    <title>ADB Studio · 网页版 ADB 工具：浏览器直连安卓设备，投屏 / 装包 / 日志 / 抓包</title>
+    <meta
+      name="description"
+      content="打开网页就能用 adb：浏览器通过 WebUSB 直连安卓设备，不用装 adb、不用装客户端。支持应用安装卸载、文件传输、scrcpy 投屏、实时 logcat，以及 HTTP / gRPC / WebSocket 抓包（应用层明文，不需要 MITM 代理和证书）。"
+    />
+    <link rel="canonical" href="https://adb.kakacat.icu/" />
+    <meta name="theme-color" content="#0f8b7e" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ADB Studio" />
+    <meta property="og:url" content="https://adb.kakacat.icu/" />
+    <meta property="og:title" content="ADB Studio · 网页版 ADB 工具" />
+    <meta
+      property="og:description"
+      content="浏览器直连安卓设备：投屏、装包、文件传输、实时日志、HTTP / gRPC / WebSocket 抓包。不用装 adb，不用装客户端。"
+    />
+    <meta property="og:image" content="https://adb.kakacat.icu/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- 结构化数据：让搜索结果有机会展示成应用卡片而不是纯链接。 -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "ADB Studio",
+        "alternateName": "网页版 ADB 工具",
+        "url": "https://adb.kakacat.icu/",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "任何支持 WebUSB 的浏览器（Chrome、Edge）",
+        "browserRequirements": "需要 WebUSB：Chrome 或 Edge，且页面必须是 HTTPS",
+        "description": "浏览器里直接跑 ADB 协议，不用安装 adb 或任何客户端。支持应用管理、文件传输、scrcpy 投屏、实时 logcat，以及应用层 HTTP / gRPC / WebSocket 抓包。",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
+        "featureList": [
+          "浏览器通过 WebUSB 直连安卓设备，无需安装 adb",
+          "应用安装 / 卸载 / 图标浏览",
+          "文件拖拽传输",
+          "scrcpy 投屏（WebCodecs 硬解码）",
+          "实时 logcat 过滤",
+          "HTTP / gRPC / WebSocket 抓包，不需要 MITM 代理和证书"
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <!--
+      #root 里这段静态内容是给**爬虫和没开 JS 的访客**看的：这是个 SPA，body 原本对
+      不执行 JS 的抓取器完全是空的，能收录到的只有一个标题。
+
+      React 的 createRoot().render() 会把 #root 的子节点整个替换掉，所以真实用户加载
+      完就看不到它 —— 不需要额外的隐藏逻辑，也不算 cloaking（这些描述和页面实际功能
+      一致）。
+    -->
+    <div id="root">
+      <main>
+        <h1>ADB Studio —— 网页版 ADB 工具</h1>
+        <p>
+          在浏览器里直接使用 ADB：通过 WebUSB 连上安卓设备，<strong
+            >不需要安装 adb，也不需要装任何客户端</strong
+          >。ADB 协议由页面自己实现，所以打开网址就能开始用。
+        </p>
+        <h2>能做什么</h2>
+        <ul>
+          <li><strong>设备信息</strong>：型号、安卓版本、序列号、连接方式、root 状态。</li>
+          <li><strong>应用管理</strong>：浏览已安装应用及真实图标、拖拽安装 APK、卸载。</li>
+          <li><strong>文件传输</strong>：把文件拖到页面上就推到设备里。</li>
+          <li>
+            <strong>投屏</strong>：基于 scrcpy，H.264 / H.265 由 WebCodecs 硬解码，支持鼠标键盘触控。
+          </li>
+          <li><strong>实时日志</strong>：logcat 按进程和级别过滤。</li>
+          <li>
+            <strong>抓包</strong>：实时查看应用的 HTTP / gRPC / WebSocket 流量，而且是<strong
+              >应用层明文</strong
+            >（HTTPS 加密前 / 解密后），不需要 MITM 代理、不需要安装证书、不受 certificate
+            pinning 影响。gRPC 能看到 method、metadata、流式消息和 status，protobuf 显示真实字段名。
+            需要目标应用集成
+            <a href="https://github.com/kakakakacat/android-netcapture">netcapture SDK</a>。
+          </li>
+        </ul>
+        <h2>浏览器要求</h2>
+        <p>
+          需要支持 WebUSB 的浏览器：<strong>Chrome 或 Edge</strong>，并且页面必须通过 HTTPS
+          打开。Safari 和 Firefox 目前不支持 WebUSB。本机已经在跑 <code>adb</code>（比如开着
+          Android Studio）时 USB 接口会被它独占，页面里提供了一个小桥接程序让两者共用同一台设备。
+        </p>
+        <p>正在加载应用…</p>
+      </main>
+    </div>
+    <noscript>
+      本站需要 JavaScript：ADB 协议是在浏览器里实现的，关闭 JavaScript 后无法连接设备。
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

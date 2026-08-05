@@ -1,0 +1,105 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+xcuserdata/
+
+# SwiftPM
+.build/
+.swiftpm/
+Package.resolved
+
+# CocoaPods
+Pods/
+*.xcworkspace
+
+# Carthage
+Carthage/Build/
+Carthage/Checkouts/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Code Injection
+iOSInjectionProject/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Archives
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Instruments
+*.instrumentsprof
+
+# Profiling
+*.gcda
+*.gcno
+*.gcov
+
+# Env
+.env
+.env.*
+*.pem
+*.p12
+*.mobileprovision
+
+# Secrets — private SSH key for the bundled Server Files feature.
+# NEVER commit the plaintext key. Only the README and the ENCRYPTED backup are tracked.
+secrets/*
+!secrets/README.md
+!secrets/id_rsa.enc
+id_rsa
+id_ed25519
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.vscode/
+
+# Distribution
+*.dmg
+*.zip
+*.pkg
+
+# web backend access token (generated per deployment; never commit)
+server/.token
+server/.env.local
+server/tls/
+server/.env
+
+# Build output and dependencies
+server/target/
+web/node_modules/
+web/dist/
+# verify:static 的截图默认落在 web/ 下（脚本没传目录时），是调试产物
+web/static-*.png
+
+# Fetched by web/scripts/fetch-assets.sh, not authored here. Version-pinned in
+# that script, so a checkout reproduces them exactly.
+web/public/scrcpy-server
+web/public/icon-helper.apk
+
+# Bridge build output and the downloadable binaries staged for the server
+bridge/target/
+server/bridge-dist/
+
+# 服务端的共享密钥（本仓库不应出现任何真实凭据）
+server/.token
+server/.env

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- See any installed package's icon (Android 11+ package visibility). -->
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
+    <!-- Headless: no launcher activity, no icon in the app drawer. Only the provider is exposed. -->
+    <application
+        android:allowBackup="false"
+        android:label="ADB Studio Icon Helper"
+        tools:ignore="MissingApplicationIcon">
+
+        <provider
+            android:name=".IconContentProvider"
+            android:authorities="com.deepmirror.iconhelper.icons"
+            android:exported="true" />
+    </application>
+
+</manifest>

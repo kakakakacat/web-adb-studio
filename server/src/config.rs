@@ -23,7 +23,7 @@ pub struct Config {
     /// context. Unset when a tunnel or reverse proxy terminates TLS instead.
     pub tls: Option<(PathBuf, PathBuf)>,
     /// Accept requests that Cloudflare Access has authenticated, when the identity
-    /// matches. `ADBSTUDIO_ACCESS_DOMAIN` (e.g. `deepmirror.com`) and
+    /// matches. `ADBSTUDIO_ACCESS_DOMAIN` (e.g. `example.com`) and
     /// `ADBSTUDIO_ACCESS_EMAILS` (comma-separated exact addresses).
     ///
     /// Access puts the verified address in `Cf-Access-Authenticated-User-Email`.

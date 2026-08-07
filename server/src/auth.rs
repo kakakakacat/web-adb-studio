@@ -209,10 +209,9 @@ mod tests {
             addr: "127.0.0.1:7070".parse().unwrap(),
             static_dir: None,
             bridge_dir: None,
-            ssh_key: None,
             adb_server: "127.0.0.1:5037".parse().unwrap(),
-            local_root: None,
             tls: None,
+            allowed_origins: Vec::new(),
             access_domain: domain.map(str::to_string),
             access_emails: emails.iter().map(|e| e.to_string()).collect(),
             token: token.map(str::to_string),
@@ -235,25 +234,25 @@ mod tests {
     // still be refused Server Files and Dino Admin.
     #[test]
     fn outside_google_account_is_signed_in_but_not_privileged() {
-        let c = cfg(Some("deepmirror.com"), &["friend@gmail.com"], None);
+        let c = cfg(Some("example.com"), &["friend@gmail.com"], None);
         assert!(!is_privileged(&c, &req_as(Some("stranger@gmail.com"), None)));
-        assert!(is_privileged(&c, &req_as(Some("someone@deepmirror.com"), None)));
+        assert!(is_privileged(&c, &req_as(Some("someone@example.com"), None)));
         assert!(is_privileged(&c, &req_as(Some("friend@gmail.com"), None)));
     }
 
     #[test]
     fn privilege_is_case_insensitive_and_rejects_lookalikes() {
-        let c = cfg(Some("deepmirror.com"), &[], None);
-        assert!(is_privileged(&c, &req_as(Some("Someone@DeepMirror.com"), None)));
-        assert!(!is_privileged(&c, &req_as(Some("x@deepmirror.com.evil.com"), None)));
-        assert!(!is_privileged(&c, &req_as(Some("x@notdeepmirror.com"), None)));
+        let c = cfg(Some("example.com"), &[], None);
+        assert!(is_privileged(&c, &req_as(Some("Someone@Example.com"), None)));
+        assert!(!is_privileged(&c, &req_as(Some("x@example.com.evil.com"), None)));
+        assert!(!is_privileged(&c, &req_as(Some("x@notexample.com"), None)));
     }
 
     // The token is the run-the-server credential; it keeps full access so split
     // and local deployments are not locked out of their own features.
     #[test]
     fn token_grants_privilege_without_an_identity() {
-        let c = cfg(Some("deepmirror.com"), &[], Some("s3cret"));
+        let c = cfg(Some("example.com"), &[], Some("s3cret"));
         assert!(is_privileged(&c, &req_as(None, Some("s3cret"))));
         assert!(!is_privileged(&c, &req_as(None, Some("wrong"))));
         assert!(!is_privileged(&c, &req_as(Some("stranger@gmail.com"), Some("wrong"))));
@@ -278,19 +277,19 @@ mod tests {
     #[test]
     fn domain_match_is_exact_not_a_suffix() {
         let extra: Vec<String> = vec!["contractor@gmail.com".into()];
-        let d = Some("deepmirror.com");
+        let d = Some("example.com");
 
-        assert!(email_allowed("qianxing.dai@deepmirror.com", d, &extra));
-        assert!(email_allowed("QIANXING.DAI@DeepMirror.COM", d, &extra), "case-insensitive");
+        assert!(email_allowed("someone@example.com", d, &extra));
+        assert!(email_allowed("SOMEONE@Example.COM", d, &extra), "case-insensitive");
         assert!(email_allowed("contractor@gmail.com", d, &extra), "explicit allow-list");
 
         // A lookalike domain must not pass a suffix-style check.
-        assert!(!email_allowed("evil@notdeepmirror.com", d, &extra));
-        assert!(!email_allowed("evil@deepmirror.com.attacker.net", d, &extra));
+        assert!(!email_allowed("evil@notexample.com", d, &extra));
+        assert!(!email_allowed("evil@example.com.attacker.net", d, &extra));
         assert!(!email_allowed("someone@gmail.com", d, &extra));
         assert!(!email_allowed("nobody", d, &extra), "no @ at all");
         // With nothing configured, nothing is allowed by identity.
-        assert!(!email_allowed("qianxing.dai@deepmirror.com", None, &[]));
+        assert!(!email_allowed("someone@example.com", None, &[]));
     }
 
     #[test]

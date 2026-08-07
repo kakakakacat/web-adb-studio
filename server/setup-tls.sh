@@ -35,7 +35,9 @@ ZONE="${ZONE:-kakacat.icu}"
 # The private address this host answers on. Published as a public A record, which
 # is legal and common: it just means the name only resolves usefully on the VPN.
 HOST_IP="${HOST_IP:-192.168.0.3}"
-EMAIL="${EMAIL:-junjie.liang@deepmirror.com}"
+# Let's Encrypt 的联系邮箱（过期提醒发到这里）。没有合理的默认值 —— 公开仓库里写死
+# 某个人的地址既是泄漏也是替别人做决定，所以要求显式给。
+EMAIL="${EMAIL:?set EMAIL — Lets Encrypt 的联系邮箱，用于证书过期提醒}"
 LEGO_VERSION="${LEGO_VERSION:-4.17.4}"
 
 : "${CF_API_TOKEN:?set CF_API_TOKEN (Cloudflare token with Zone:DNS:Edit), or put it in $TOKEN_FILE}"

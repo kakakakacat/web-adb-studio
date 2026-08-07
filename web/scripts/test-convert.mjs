@@ -190,10 +190,79 @@ check(
   );
 }
 
+// --- 2b. the shipped defaults: lossy, with an alpha channel ----------------
+//
+// A different libwebp output shape, and the one users get without touching
+// anything: lossy + alpha is `VP8X` + `ALPH` + `VP8 `, three chunks where
+// lossless is one. Getting the ALPH chunk wrong (dropping it, or keeping the
+// VP8X that belongs to the still image) loses transparency or breaks the parse
+// entirely — and no pixel test would catch it, because lossy output can't be
+// compared exactly.
+
+/** Same walking square, but on a transparent background. */
+function makeAlphaFrame(i) {
+  const data = new Uint8ClampedArray(W * H * 4);
+  const ox = 4 + i * 6;
+  for (let y = 20; y < 28; y++) {
+    for (let x = ox; x < ox + 8 && x < W; x++) {
+      const p = (y * W + x) * 4;
+      data[p] = 255;
+      data[p + 3] = 255;
+    }
+  }
+  return data;
+}
+
+{
+  const alphaFrames = Array.from({ length: N }, (_, i) => makeAlphaFrame(i));
+  const builder = new AnimWebpBuilder(W, H, DEFAULT_OPTIONS.webp, async (pixels, o) => {
+    const still = await encodeWebp(pixels, {
+      lossless: o.lossless ? 1 : 0,
+      quality: o.quality,
+      method: o.method,
+      near_lossless: 100,
+      exact: o.exact ? 1 : 0,
+    });
+    return new Uint8Array(still);
+  });
+  for (let i = 0; i < N; i++) {
+    await builder.addFrame({ data: alphaFrames[i], width: W, height: H }, durations[i]);
+  }
+  const lossyAlpha = builder.finish();
+
+  check("默认参数（有损 q75）能出片", lossyAlpha.frames === N && lossyAlpha.bytes.length > 100, `${lossyAlpha.frames} 帧 ${lossyAlpha.bytes.length}B`);
+
+  const still = new Uint8Array(
+    await encodeWebp({ data: alphaFrames[0], width: W, height: H }, { lossless: 0, quality: 75, method: 4 }),
+  );
+  const parsed = parseStillWebp(still);
+  check(
+    "有损 + alpha 的单帧解析出 ALPH，且丢掉了它自己的 VP8X",
+    parsed.hasAlpha && !parsed.lossless && parsed.bitstream.length > 0,
+    JSON.stringify({ hasAlpha: parsed.hasAlpha, lossless: parsed.lossless }),
+  );
+  const tags = [];
+  for (let at = 0; at + 8 <= parsed.bitstream.length; ) {
+    const tag = String.fromCharCode(...parsed.bitstream.subarray(at, at + 4));
+    const size = new DataView(
+      parsed.bitstream.buffer,
+      parsed.bitstream.byteOffset + at + 4,
+      4,
+    ).getUint32(0, true);
+    tags.push(tag);
+    at += 8 + size + (size & 1);
+  }
+  check("ANMF 里就是 ALPH + VP8", JSON.stringify(tags) === JSON.stringify(["ALPH", "VP8 "]), tags.join("+"));
+
+  var lossyAlphaBytes = lossyAlpha.bytes;
+}
+
 const dir = mkdtempSync(join(tmpdir(), "convert-test-"));
 const ours = join(dir, "ours.webp");
 writeFileSync(ours, diffed.bytes);
-console.log(`\n产物：${ours}`);
+const lossy = join(dir, "lossy-alpha.webp");
+writeFileSync(lossy, lossyAlphaBytes);
+console.log(`\n产物：${ours}\n      ${lossy}`);
 
 if (!has("webpinfo")) {
   console.log("SKIP  webpinfo 不在 PATH（brew install webp）");
@@ -220,6 +289,16 @@ try {
   execFileSync("python3", ["-c", "import PIL"], { stdio: "pipe" });
 } catch {
   pillow = false;
+}
+
+// The lossy/alpha default, through the reference tools too: does the container
+// parse, and did transparency survive the round trip?
+if (has("webpinfo")) {
+  const info = execFileSync("webpinfo", [lossy], { encoding: "utf8" });
+  check("有损 + alpha 的动图容器 webpinfo 认", /No error detected|Errors detected: 0/i.test(info));
+  // 这两行是 VP8X 的 feature flags —— 少了 alpha 位，解码器会当不透明处理。
+  check("VP8X 标了 Alpha + Animation", /Alpha: 1/.test(info) && /Animation: 1/.test(info));
+  check("ANMF 数量 = 全部帧（透明背景下没有重复帧）", (info.match(/ANMF/g) ?? []).length === N);
 }
 
 if (!pillow) {

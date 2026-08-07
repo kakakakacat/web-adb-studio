@@ -37,7 +37,9 @@ Safari 和 Firefox 不支持 WebUSB。
 - 产物可以直接在页面里预览（棋盘格看透明、1:1 看像素），或点「在浏览器中打开」
   用浏览器自己解一遍。
 
-参数默认值对齐 `scripts/img2webp.sh` 和 `scripts/png2mp4.sh`。验证：
+默认是**有损 q75 + 透明留边**（几百帧的动画无损要大好几倍，而这些东西最后是要进设备的；
+留边默认透明是因为烘进去的黑边找不回来 —— MP4 没有 alpha，会退回黑色，面板里会提示）。
+其余参数跟着 `scripts/img2webp.sh` / `png2mp4.sh` 走：`-m 4`、20fps。验证：
 `npm run test:convert`（拿 `webpinfo` + libwebp 解码器逐像素回读，并和 `img2webp`
 比体积）、`npm run verify:convert`（真 Chrome 端到端跑一遍两条编码路径）。
 

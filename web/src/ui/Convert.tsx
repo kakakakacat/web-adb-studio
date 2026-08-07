@@ -55,7 +55,15 @@ interface Result {
   durationMs: number;
 }
 
-/** A labelled control. Ten of these in a row is the whole panel. */
+/**
+ * A labelled control, with the parameter's explanation behind a "?".
+ *
+ * The bubble is `position: fixed` and placed from the icon's measured rect rather
+ * than being an absolutely-positioned child. Inside the panel it would be at the
+ * mercy of whichever ancestor scrolls or clips — and these explanations are two
+ * lines of ffmpeg equivalence, i.e. exactly the size that gets cut off. Fixed
+ * coordinates also make it trivial to keep the bubble inside the window.
+ */
 function Field({
   label,
   hint,
@@ -65,11 +73,39 @@ function Field({
   hint?: string;
   children: React.ReactNode;
 }) {
+  const [at, setAt] = useState<{ x: number; y: number } | null>(null);
+
+  const show = (e: React.SyntheticEvent<HTMLElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const half = 150;
+    setAt({
+      x: Math.min(Math.max(r.left + r.width / 2, half + 8), window.innerWidth - half - 8),
+      y: r.bottom + 8,
+    });
+  };
+
   return (
     <label className="field">
       <span className="fl">
         {label}
-        {hint && <em title={hint}>?</em>}
+        {hint && (
+          // Focusable so the explanation isn't mouse-only.
+          <em
+            tabIndex={0}
+            aria-label={hint}
+            onPointerEnter={show}
+            onPointerLeave={() => setAt(null)}
+            onFocus={show}
+            onBlur={() => setAt(null)}
+          >
+            ?
+            {at && (
+              <span className="tip" role="tooltip" style={{ left: at.x, top: at.y }}>
+                {hint}
+              </span>
+            )}
+          </em>
+        )}
       </span>
       {children}
     </label>
@@ -466,7 +502,10 @@ export function Convert() {
           {opts.format === "webp" ? (
             <>
               <div className="fields">
-                <Field label="无损" hint="img2webp -lossless。关掉后用 quality 控制有损压缩。">
+                <Field
+                  label="无损"
+                  hint="默认有损，画质由下面的 q 控制。切到无损（img2webp -lossless）体积通常大好几倍，值得的场合是像素画、纯色图标这类有大片相同像素的素材。"
+                >
                   <select
                     value={opts.webp.lossless ? "1" : "0"}
                     onChange={(e) =>

@@ -159,6 +159,15 @@ async function run(label) {
   await page.waitForFunction(() => document.body.innerText.includes("预览"), { timeout: 120000 });
   return page.evaluate(async () => {
     const el = document.querySelector('[data-role="out"]');
+    // A <video> reports 0x0 until metadata arrives, so reading it straight after
+    // the element appears is a coin flip.
+    if (el.tagName === "VIDEO" && !el.videoWidth) {
+      await new Promise((res) => {
+        if (el.readyState >= 1) res();
+        else el.addEventListener("loadedmetadata", res, { once: true });
+        setTimeout(res, 5000);
+      });
+    }
     const res = await fetch(el.src);
     const buf = new Uint8Array(await res.arrayBuffer());
     const magic = String.fromCharCode(...buf.subarray(0, 4));

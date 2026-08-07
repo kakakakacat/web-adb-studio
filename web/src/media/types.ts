@@ -80,8 +80,15 @@ export const DEFAULT_OPTIONS: JobOptions = {
   format: "webp",
   fps: 20,
   step: 1,
-  size: { mode: "original", width: 1200, height: 1920, fit: "contain", pad: "#000000" },
-  // Defaults match scripts/img2webp.sh: `img2webp -lossless -d 50 -m 4`.
-  webp: { lossless: true, quality: 75, method: 4, nearLossless: 100, exact: false, loop: 0, diff: true },
+  // Transparent padding by default: the sequences this exists for are UI/character
+  // animations with alpha, and a black letterbox baked into them is not
+  // recoverable. MP4 has no alpha channel and falls back to black — the panel says
+  // so when that combination is selected.
+  size: { mode: "original", width: 1200, height: 1920, fit: "contain", pad: "transparent" },
+  // Lossy q75 rather than img2webp.sh's `-lossless`: for a few hundred frames the
+  // lossless file is several times bigger, and these end up on a device where that
+  // is the number that matters. Everything else still matches the script
+  // (`-m 4`, 20fps → 50ms).
+  webp: { lossless: false, quality: 75, method: 4, nearLossless: 100, exact: false, loop: 0, diff: true },
   mp4: { codec: "avc", bitrateMbps: 8, keyframeSec: 2 },
 };

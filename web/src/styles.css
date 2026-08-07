@@ -1333,6 +1333,39 @@ label.check input {
   font: 700 10px/1 var(--sans, inherit);
   font-style: normal;
   cursor: help;
+  /* The grid centres the "?"; the bubble is fixed-positioned so it must not be
+     laid out as a second grid item. */
+  position: relative;
+}
+
+.field .fl em:hover,
+.field .fl em:focus-visible {
+  background: var(--accent);
+  color: var(--accent-text);
+  outline: none;
+}
+
+/* Placed from JS-measured coordinates (see Field in ui/Convert.tsx), so it can
+   never be clipped by a scrolling ancestor. */
+.field .fl em .tip {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 60;
+  width: max-content;
+  max-width: 300px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--sh-2);
+  color: var(--text-2);
+  font: 500 12px/1.65 var(--sans, inherit);
+  font-style: normal;
+  text-align: left;
+  white-space: normal;
+  /* The bubble sits under the cursor's path; letting it swallow pointer events
+     would make the icon flicker between hover and not. */
+  pointer-events: none;
 }
 
 .field input,

@@ -103,3 +103,6 @@ server/bridge-dist/
 # 服务端的共享密钥（本仓库不应出现任何真实凭据）
 server/.token
 server/.env
+
+# wrangler 的本地构建缓存
+.wrangler/

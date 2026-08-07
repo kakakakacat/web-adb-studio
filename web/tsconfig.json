@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
@@ -15,7 +19,15 @@
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
     "useDefineForClassFields": true,
-    "types": ["w3c-web-usb", "vite/client"]
+    "types": [
+      "w3c-web-usb",
+      "vite/client",
+      "@cloudflare/workers-types"
+    ]
   },
-  "include": ["src", "vite.config.ts"]
+  "include": [
+    "src",
+    "vite.config.ts",
+    "functions"
+  ]
 }

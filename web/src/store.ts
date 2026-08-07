@@ -8,6 +8,7 @@ import type { Adb } from "@yume-chan/adb";
 import { create } from "zustand";
 
 import * as api from "./api";
+import * as diag from "./diag";
 import * as device from "./adb/device";
 import { deviceInfo } from "./adb/device";
 import * as server from "./adb/server";
@@ -49,6 +50,16 @@ interface State {
   serverReady: boolean;
   devices: Device[];
   active: Active | null;
+  /**
+   * The device an adb server is holding, when neither WebUSB nor a bridge could
+   * get to it.
+   *
+   * Kept in state rather than only announced in a toast: after the toast expires
+   * the page shows a device in the sidebar and nothing else, which reads as "the
+   * app is broken" instead of "another program owns the USB interface". This is
+   * what the empty state and the device row use to keep saying so.
+   */
+  blocked: { serial: string; name: string } | null;
   tab: Tab;
   busy: string | null;
   toasts: Toast[];
@@ -68,7 +79,7 @@ interface State {
    * Recover from "an adb server owns this device" by switching to a local bridge
    * to that same adb server. Resolves true if the transport was switched.
    */
-  rescueBusy(): Promise<boolean>;
+  rescueBusy(device?: { serial: string; name: string }): Promise<boolean>;
   /** Rebuild the session for the currently selected device. */
   reconnect(): Promise<boolean>;
   /**
@@ -138,9 +149,16 @@ const toastTimers = new Map<number, number>();
 async function fallBackToBridge(): Promise<boolean> {
   const previous = server.bridgeOverride();
   // Already pointed at a bridge and still busy: nothing left to switch to.
-  if (previous) return false;
+  if (previous) {
+    diag.log("bridge", "already on a bridge and still busy", { url: previous });
+    return false;
+  }
   server.setBridgeOverride(server.LOCAL_BRIDGE_URL);
-  if (await server.serverAvailable()) return true;
+  const reachable = await server.serverAvailable();
+  diag.log("bridge", reachable ? "local bridge reachable" : "local bridge not reachable", {
+    url: server.LOCAL_BRIDGE_URL,
+  });
+  if (reachable) return true;
   // Leave no override behind, or every later request would go to a bridge that
   // isn't there.
   server.setBridgeOverride(null);
@@ -153,6 +171,7 @@ export const useStore = create<State>((set, get) => ({
   serverReady: false,
   devices: [],
   active: null,
+  blocked: null,
   tab: "device",
   busy: null,
   toasts: [],
@@ -256,13 +275,23 @@ export const useStore = create<State>((set, get) => ({
     if (active && !devices.some((d) => d.serial === active.device.serial)) {
       devices.unshift(active.device);
     }
+    // The list, as the sidebar will show it: a report where a device is listed
+    // yet nothing works is exactly the confusing case this exists for.
+    diag.log(
+      "devices",
+      `${devices.length} device(s)`,
+      devices.map((d) => ({ serial: d.serial, source: d.source, state: d.state })),
+    );
     set({ devices });
   },
 
   async addUsbDevice() {
+    // Declared out here so the catch can name the device in a "被占用" message.
+    let picked: { serial: string; name: string } | undefined;
     try {
       const raw = await session.requestDevice();
       if (!raw) return; // user cancelled the chooser
+      picked = { serial: raw.serial, name: raw.name };
 
       // The chooser lists the phone whether or not this page already has it, and
       // picking one we are already using could only ever fail: an adb server or
@@ -291,6 +320,7 @@ export const useStore = create<State>((set, get) => ({
         active: { device: s.device, adb: s.adb, close: s.close },
         tab: tabAfterConnect(get().tab),
         busy: null,
+        blocked: null,
       });
       get().toast("success", `已连接 ${s.device.name}`);
       void s.disconnected.then(() => {
@@ -304,16 +334,23 @@ export const useStore = create<State>((set, get) => ({
       await get().refreshDevices();
     } catch (e) {
       set({ busy: null });
-      if (e instanceof session.DeviceBusyError && (await get().rescueBusy())) return;
+      if (
+        e instanceof session.DeviceBusyError &&
+        (await get().rescueBusy(picked))
+      ) {
+        return;
+      }
       get().toast("error", errorMessage(e));
     }
   },
 
-  async rescueBusy() {
+  async rescueBusy(device) {
+    diag.log("connect", "device busy, trying bridge", device);
     set({ busy: "设备被 adb 占用，正在尝试本机桥接…" });
     const ok = await fallBackToBridge();
     if (!ok) {
-      set({ busy: null });
+      // Remember it, so the page can keep explaining after the toast is gone.
+      set({ busy: null, blocked: device ?? get().blocked });
       // Nothing automatic is left, so say exactly what a person can do about it
       // — both ways, with their costs. "Device busy" on its own sends people
       // hunting for a setting that doesn't exist.
@@ -326,7 +363,7 @@ export const useStore = create<State>((set, get) => ({
       );
       return false;
     }
-    set({ serverReady: true });
+    set({ serverReady: true, blocked: null });
     await get().refreshDevices();
     // The bridge lists the same physical device under the same serial, so a
     // remembered one still matches; otherwise take the single device it offers.
@@ -348,6 +385,12 @@ export const useStore = create<State>((set, get) => ({
 
   async select(device, opts) {
     if (get().active?.device.serial === device.serial) return;
+    diag.log("connect", "select", {
+      serial: device.serial,
+      source: device.source,
+      state: device.state,
+      auto: opts?.quiet === true,
+    });
     await get().disconnect();
     if (!opts?.quiet) set({ busy: `正在连接 ${device.name}…` });
     try {
@@ -370,17 +413,27 @@ export const useStore = create<State>((set, get) => ({
           }
         });
       }
-      set({ busy: null, tab: tabAfterConnect(get().tab) });
+      set({ busy: null, tab: tabAfterConnect(get().tab), blocked: null });
       // Remember it so the next visit reconnects the same one without asking.
       localStorage.setItem(LAST_DEVICE_KEY, device.serial);
       await get().reloadInfo();
       await get().refreshDevices();
     } catch (e) {
       set({ busy: null });
+      diag.log("connect", "select failed", {
+        serial: device.serial,
+        source: device.source,
+        error: errorMessage(e),
+      });
       // Busy is worth rescuing even on an automatic attempt: switching transport
       // is exactly what the user would have to do by hand, and it is silent when
       // it works.
-      if (e instanceof session.DeviceBusyError && (await get().rescueBusy())) return;
+      if (
+        e instanceof session.DeviceBusyError &&
+        (await get().rescueBusy({ serial: device.serial, name: device.model ?? device.name }))
+      ) {
+        return;
+      }
       // Any other automatic attempt must not greet you with an error dialog — the
       // device stays listed and clicking it shows the real reason.
       if (!opts?.quiet) get().toast("error", errorMessage(e));

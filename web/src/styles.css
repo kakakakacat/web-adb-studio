@@ -1425,3 +1425,72 @@ label.check input {
 a.preview {
   cursor: zoom-in;
 }
+
+/* --- 设备被 adb 占用的常驻说明（ui/DeviceBusy.tsx） --------------------- */
+
+.empty .box.busybox {
+  max-width: 640px;
+  padding: 34px 38px;
+  text-align: left;
+}
+
+.empty .box.busybox h2 {
+  margin: 14px 0 10px;
+}
+
+.empty .box.busybox > p {
+  margin: 0 0 20px;
+  line-height: 1.75;
+}
+
+.empty .art.warn {
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+}
+
+.ways {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.way {
+  padding: 14px 16px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.way .k {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+  margin-bottom: 6px;
+}
+
+.way p {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text-3);
+}
+
+.way code.mono {
+  flex: 1;
+  padding: 7px 11px;
+  border-radius: 8px;
+  background: var(--surface-3);
+  user-select: all;
+}
+
+.diagfoot {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.diagfoot p {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.7;
+}

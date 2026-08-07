@@ -16,6 +16,7 @@ import {
 } from "@yume-chan/adb-daemon-webusb";
 import AdbWebCredentialStore from "@yume-chan/adb-credential-web";
 
+import * as diag from "../diag";
 import type { Device } from "../types";
 
 /** The RSA keypair that authorizes us on devices; persisted in IndexedDB, so
@@ -89,9 +90,17 @@ export class DeviceBusyError extends Error {}
  */
 export async function connect(raw: AdbDaemonWebUsbDevice): Promise<Session> {
   let connection;
+  diag.log("usb", "claiming interface", { serial: raw.serial, name: raw.name });
   try {
     connection = await raw.connect();
   } catch (e) {
+    diag.log("usb", "claim failed", {
+      serial: raw.serial,
+      // The distinction that decides everything downstream: "busy" has an
+      // automatic remedy (the bridge), anything else does not.
+      busy: e instanceof AdbDaemonWebUsbDevice.DeviceBusyError,
+      error: e instanceof Error ? `${e.name}: ${e.message}` : String(e),
+    });
     if (e instanceof AdbDaemonWebUsbDevice.DeviceBusyError) {
       // Two ways out, and the order matters: `kill-server` disconnects Android
       // Studio, the bridge doesn't. Recommend the one that doesn't break the
@@ -114,6 +123,7 @@ export async function connect(raw: AdbDaemonWebUsbDevice): Promise<Session> {
 
   const adb = new Adb(transport);
   const device = toDevice(raw, "device");
+  diag.log("usb", "authenticated", { serial: raw.serial, model: transport.banner.model });
   device.product = transport.banner.product;
   device.model = transport.banner.model;
 

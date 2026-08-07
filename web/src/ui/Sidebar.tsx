@@ -8,6 +8,12 @@ function stateLabel(d: Device) {
   return null;
 }
 
+/** The device is there, but a local adb server owns the interface. */
+function blockedLabel(d: Device, blocked: { serial: string } | null) {
+  if (blocked?.serial !== d.serial) return null;
+  return <span className="pill bad">被占用</span>;
+}
+
 function sourceLabel(d: Device) {
   // Worth showing: it tells the user whether this device is competing with a
   // local adb server (webusb) or sharing it (bridge).
@@ -23,6 +29,7 @@ export function Sidebar() {
   const select = useStore((s) => s.select);
   const addUsbDevice = useStore((s) => s.addUsbDevice);
   const refreshDevices = useStore((s) => s.refreshDevices);
+  const blocked = useStore((s) => s.blocked);
 
   return (
     <aside className="sidebar">
@@ -52,7 +59,7 @@ export function Sidebar() {
             <div className="name">{d.model ?? d.name}</div>
             <div className="sub">{d.serial}</div>
           </div>
-          {stateLabel(d)}
+          {blockedLabel(d, blocked) ?? stateLabel(d)}
           {sourceLabel(d)}
         </button>
       ))}

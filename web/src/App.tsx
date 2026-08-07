@@ -5,6 +5,7 @@ import { useStore, type Tab } from "./store";
 import { Apps } from "./ui/Apps";
 import { Convert } from "./ui/Convert";
 import { Device } from "./ui/Device";
+import { DeviceBusy } from "./ui/DeviceBusy";
 import { Files } from "./ui/Files";
 import { Help } from "./ui/Help";
 import { Icon } from "./ui/Icon";
@@ -37,6 +38,7 @@ export function App() {
   const init = useStore((s) => s.init);
   const watchDevices = useStore((s) => s.watchDevices);
   const active = useStore((s) => s.active);
+  const blocked = useStore((s) => s.blocked);
   const tab = useStore((s) => s.tab);
   const setTab = useStore((s) => s.setTab);
   const disconnect = useStore((s) => s.disconnect);
@@ -197,19 +199,27 @@ export function App() {
           {tab === "convert" ? (
             <Convert />
           ) : !active ? (
-            <div className="empty">
-              <div className="box">
-                <div className="art">
-                  <Icon name="usb" />
+            // Two different empty states. "设备被占用" is not the absence of a
+            // device — it's a device sitting right there in the sidebar that
+            // another program owns, and saying "插上手机" to someone whose phone is
+            // already plugged in is how a page loses an hour of their time.
+            blocked ? (
+              <DeviceBusy blocked={blocked} onHelp={() => setPanel("help")} />
+            ) : (
+              <div className="empty">
+                <div className="box">
+                  <div className="art">
+                    <Icon name="usb" />
+                  </div>
+                  <h2>连接一台设备</h2>
+                  <p>插上手机，点左下角按钮授权即可。</p>
+                  <button className="btn ghost" onClick={() => setPanel("help")}>
+                    <Icon name="settings" />
+                    连接方式 / 环境自检
+                  </button>
                 </div>
-                <h2>连接一台设备</h2>
-                <p>插上手机，点左下角按钮授权即可。</p>
-                <button className="btn ghost" onClick={() => setPanel("help")}>
-                  <Icon name="settings" />
-                  连接方式 / 环境自检
-                </button>
               </div>
-            </div>
+            )
           ) : tab === "device" ? (
             <Device active={active} />
           ) : tab === "apps" ? (

@@ -27,7 +27,8 @@
     "test:install": "node scripts/test-install-choice.mjs",
     "verify:root": "node scripts/verify-root-reconnect.mjs",
     "test:convert": "node scripts/test-convert.mjs",
-    "verify:convert": "node scripts/verify-convert.mjs"
+    "verify:convert": "node scripts/verify-convert.mjs",
+    "verify:diag": "node scripts/verify-diag.mjs"
   },
   "dependencies": {
     "@jsquash/webp": "^1.5.0",

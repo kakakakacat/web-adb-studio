@@ -56,6 +56,30 @@ Safari 和 Firefox 不支持 WebUSB。
 设备侧只开一个 abstract LocalSocket，网页通过已有的 adb 连接直接读它 ——
 不监听任何 TCP 端口，也不需要 `adb forward`（WebUSB 模式下电脑上根本没有 adb server）。
 
+## 连不上时的诊断日志
+
+页面在本机记录连接过程 —— 试了哪条通路、`claim` 报了什么错、桥接探测的结果、浏览器
+有哪些能力、USB 设备处于什么状态。**这些记录不会自动外发**：只有点了「上传诊断日志」
+（占用页里，或齿轮面板底部）才会传一份到 Cloudflare，然后页面给出一个短编号，
+把编号发给维护者就行 —— 不用导文件、不用截图。
+
+不含文件内容、屏幕内容和任何令牌；含设备序列号（那是把报告和某台手机对上的唯一键）。
+
+维护者侧：
+
+```bash
+export DIAG_TOKEN=…            # 或写进 ~/.adbstudio-diag-token
+./scripts/diag.sh list         # 最近 30 条：时间 / 编号 / 摘要 / 平台 / 备注
+./scripts/diag.sh get <id>     # 某一条的正文
+./scripts/diag.sh serial <序列号>
+./scripts/diag.sh stats        # 用量与配额
+```
+
+存在 D1（`functions/diag/[[path]].ts` + `functions/diag-schema.sql`）。上传端点公开
+可写 —— 它必须能在出问题的那台机器上点得下去，而那台机器不一定有本站任何凭据 ——
+所以三道闸都在服务端：单条体积上限、按来源（IP 的加盐哈希）限流、总量 200MB 配额，
+写满就按时间删最旧的。查看必须带 token。
+
 ## 两条 ADB 通路
 
 连上之后都是同一个 Tango `Adb` 对象，所以上层功能只写一份。

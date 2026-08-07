@@ -106,3 +106,6 @@ server/.env
 
 # wrangler 的本地构建缓存
 .wrangler/
+
+# 本地 Function 的环境变量（DIAG_TOKEN 之类）。线上用 wrangler pages secret put。
+.dev.vars

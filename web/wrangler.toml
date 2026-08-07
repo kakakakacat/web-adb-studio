@@ -1,0 +1,15 @@
+# Pages 侧的配置。存在的唯一理由是 D1 绑定 —— 诊断报告要写库
+# （functions/diag/[[path]].ts），而绑定只能来自这里或者控制台手点。写在仓库里，
+# 部署脚本就能一条命令带上，换机器也不用记得去点。
+#
+# 秘密不在这里：DIAG_TOKEN / DIAG_SALT 用
+#   npx wrangler pages secret put DIAG_TOKEN --project-name adb-studio
+# 单独设，加密存在 Cloudflare 侧。
+name = "adb-studio"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-08-01"
+
+[[d1_databases]]
+binding = "adbstudio_diag"
+database_name = "adbstudio-diag"
+database_id = "325f8eb9-9a04-4de0-8615-3d9b880dde63"

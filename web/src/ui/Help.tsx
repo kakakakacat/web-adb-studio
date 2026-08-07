@@ -13,6 +13,7 @@ import * as api from "../api";
 import { useStore } from "../store";
 import { errorMessage } from "../types";
 import { Icon } from "./Icon";
+import { DiagUpload } from "./DiagUpload";
 import { Modal } from "./Modal";
 
 /**
@@ -309,6 +310,14 @@ export function Help({ onClose }: { onClose(): void }) {
         ，只用于签发证书）搞混 —— 这里要的是服务端{" "}
         <code className="mono">server/.token</code> 里那串 64 位十六进制。
       </p>
+
+      <h3>连不上？上传诊断日志</h3>
+      <p className="muted" style={{ fontSize: 12 }}>
+        页面一直在本机记录连接过程（尝试了哪条通路、报了什么错、浏览器有哪些能力、
+        USB 设备是什么状态）。这些记录<strong>不会自动外发</strong>；点下面的按钮才会传一份
+        上去，然后把拿到的编号发给维护者即可。不含文件内容、屏幕内容和令牌。
+      </p>
+      <DiagUpload />
     </Modal>
   );
 }

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { isSplitDeployment, signIn } from "./api";
 import { useStore, type Tab } from "./store";
 import { Apps } from "./ui/Apps";
+import { Convert } from "./ui/Convert";
 import { Device } from "./ui/Device";
 import { Files } from "./ui/Files";
 import { Help } from "./ui/Help";
@@ -16,7 +17,7 @@ import { BusyOverlay, Toasts } from "./ui/Toasts";
 // "概览" and "工具" were each half a screen of facts and buttons, so they live
 // together on 设备. 投屏 and 日志 get their own pages because both want the full
 // height and neither fits the card-grid layout.
-const TABS: { key: Tab; label: string }[] = [
+const DEVICE_TABS: { key: Tab; label: string }[] = [
   { key: "device", label: "设备" },
   { key: "apps", label: "应用" },
   { key: "files", label: "文件" },
@@ -24,6 +25,11 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "logcat", label: "日志" },
   { key: "net", label: "抓包" },
 ];
+
+// 转码 works on local files with the browser's own codecs — no adb, no device.
+// So it is offered on an empty page too, where every other tab would be a dead
+// end.
+const FREE_TABS: { key: Tab; label: string }[] = [{ key: "convert", label: "转码" }];
 
 type Panel = "help" | null;
 
@@ -108,20 +114,19 @@ export function App() {
         </div>
 
         <div className="topbar">
-          {active ? (
-            <div className="tabs">
-              {TABS.map((t) => (
-                <button
-                  key={t.key}
-                  className={`tab ${tab === t.key ? "on" : ""}`}
-                  onClick={() => setTab(t.key)}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <span className="muted" style={{ paddingLeft: 14 }}>
+          <div className="tabs">
+            {(active ? [...DEVICE_TABS, ...FREE_TABS] : FREE_TABS).map((t) => (
+              <button
+                key={t.key}
+                className={`tab ${tab === t.key ? "on" : ""}`}
+                onClick={() => setTab(t.key)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          {!active && (
+            <span className="muted" style={{ paddingLeft: 4 }}>
               未连接设备
             </span>
           )}
@@ -188,7 +193,10 @@ export function App() {
         <Sidebar />
 
         <main className="main">
-          {!active ? (
+          {/* Before the device check: this page doesn't need one. */}
+          {tab === "convert" ? (
+            <Convert />
+          ) : !active ? (
             <div className="empty">
               <div className="box">
                 <div className="art">

@@ -17,6 +17,29 @@ Safari 和 Firefox 不支持 WebUSB。
 - **实时日志** —— logcat 按进程和级别过滤
 - **性能采样** —— CPU / 内存 / 帧率
 - **抓包** —— 实时查看应用的 HTTP / gRPC / WebSocket 流量
+- **转码** —— 图片序列 → 动图 WebP / MP4，不用装 ffmpeg，也不需要连设备
+
+## 转码（图片序列 → 动图 / 视频）
+
+选一个图片文件夹（png / jpg），按帧率、尺寸、编码参数导出**动图 WebP** 或 **MP4**，
+参数在页面上直接调。**全部在浏览器里跑：图片不上传，后端不参与，也不需要装 ffmpeg
+或 libwebp。** 这一页不需要连设备，没插手机也能用。
+
+- **WebP** —— 编码器就是 libwebp 本身（wasm 构建），暴露的就是 `img2webp` / `cwebp`
+  的那几个参数：`-lossless`、`-q`、`-m`、`-near_lossless`、`-exact`、循环次数。
+  容器（VP8X / ANIM / ANMF）由页面自己拼。默认开**跨帧差分**：只编码相对上一帧变化的
+  那块矩形，和前一帧完全相同的帧直接并进它的时长 —— 背景静止的动画能小一个数量级，
+  实测比 `img2webp -lossless -m 4` 还略小一点。
+- **MP4** —— 用 WebCodecs 硬件编码（H.264，机器支持就给 HEVC / VP9 / AV1，
+  列表是 `isConfigSupported` 探出来的）。没有 CRF 这个旋钮，质量按目标码率给。
+- 缩放对应 `png2mp4.sh` 的 `force_original_aspect_ratio=decrease` + `pad`，
+  另有填充裁切和拉伸；帧序按文件名自然序，不必像 shell 那样补零。
+- 产物可以直接在页面里预览（棋盘格看透明、1:1 看像素），或点「在浏览器中打开」
+  用浏览器自己解一遍。
+
+参数默认值对齐 `scripts/img2webp.sh` 和 `scripts/png2mp4.sh`。验证：
+`npm run test:convert`（拿 `webpinfo` + libwebp 解码器逐像素回读，并和 `img2webp`
+比体积）、`npm run verify:convert`（真 Chrome 端到端跑一遍两条编码路径）。
 
 ## 抓包
 

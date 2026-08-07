@@ -1294,3 +1294,101 @@ label.check input {
   margin-bottom: 4px;
   font-size: 11px;
 }
+
+/* --- 转码（图片序列 → 动图 / 视频） -------------------------------------- */
+
+/* A two-column grid of label-above-control pairs. The panel is ~10 of them, so
+   they line up instead of each one carrying its own inline style. */
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px 12px;
+}
+
+.field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.field .fl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+/* The "?" next to a label: the explanation lives in its title attribute, which
+   keeps a paragraph of ffmpeg equivalence out of the layout. */
+.field .fl em {
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text-3);
+  font: 700 10px/1 var(--sans, inherit);
+  font-style: normal;
+  cursor: help;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  padding: 8px 11px;
+}
+
+.preview {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  max-height: 60vh;
+  padding: 10px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  overflow: auto;
+}
+
+/* Transparency has to be visible: a transparent WebP on a dark card looks
+   exactly like a black one. */
+.preview.checker {
+  --sq: 10px;
+  background-image:
+    linear-gradient(45deg, rgba(128, 128, 128, 0.22) 25%, transparent 25% 75%, rgba(128, 128, 128, 0.22) 75%),
+    linear-gradient(45deg, rgba(128, 128, 128, 0.22) 25%, transparent 25% 75%, rgba(128, 128, 128, 0.22) 75%);
+  background-size: calc(var(--sq) * 2) calc(var(--sq) * 2);
+  background-position: 0 0, var(--sq) var(--sq);
+}
+
+.preview.fit img,
+.preview.fit video {
+  max-width: 100%;
+  max-height: 56vh;
+  object-fit: contain;
+}
+
+/* 1:1 — one image pixel per CSS pixel, scrolling inside the box. Checking a
+   sprite sheet for resampling blur needs this and nothing else. */
+.preview.actual img,
+.preview.actual video {
+  max-width: none;
+  max-height: none;
+  image-rendering: pixelated;
+}
+
+.preview img,
+.preview video {
+  display: block;
+  border-radius: 6px;
+  /* Default for boxes that opt into neither fit nor actual, e.g. the source
+     thumbnail. `.preview.actual img` outranks this on specificity, not order. */
+  max-width: 100%;
+  max-height: 56vh;
+}
+
+a.preview {
+  cursor: zoom-in;
+}

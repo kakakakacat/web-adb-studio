@@ -25,9 +25,12 @@
     "verify:transport": "node scripts/verify-transport-auto.mjs",
     "test:apk": "node scripts/test-apk-parse.mjs",
     "test:install": "node scripts/test-install-choice.mjs",
-    "verify:root": "node scripts/verify-root-reconnect.mjs"
+    "verify:root": "node scripts/verify-root-reconnect.mjs",
+    "test:convert": "node scripts/test-convert.mjs",
+    "verify:convert": "node scripts/verify-convert.mjs"
   },
   "dependencies": {
+    "@jsquash/webp": "^1.5.0",
     "@yume-chan/adb": "^2.6.2",
     "@yume-chan/adb-credential-web": "^2.1.0",
     "@yume-chan/adb-daemon-webusb": "^2.3.2",
@@ -36,12 +39,14 @@
     "@yume-chan/scrcpy": "^2.3.0",
     "@yume-chan/scrcpy-decoder-webcodecs": "^2.5.3",
     "@yume-chan/stream-extra": "^2.6.1",
+    "mp4-muxer": "^5.2.2",
     "protobufjs": "^8.7.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260804.1",
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",

@@ -14,7 +14,18 @@ import * as server from "./adb/server";
 import * as session from "./adb/session";
 import { errorMessage, type Device, type DeviceInfo } from "./types";
 
-export type Tab = "device" | "apps" | "files" | "mirror" | "logcat" | "net";
+// "convert" is the odd one out: it needs no device, so it stays reachable (and
+// stays put) whether or not one is connected.
+export type Tab = "device" | "apps" | "files" | "mirror" | "logcat" | "net" | "convert";
+
+/**
+ * Where to land after connecting. Always 设备 — except that yanking someone out
+ * of 转码 would unmount a conversion that may be halfway through a few hundred
+ * frames, and plugging in a phone is not a reason to throw that away.
+ */
+function tabAfterConnect(current: Tab): Tab {
+  return current === "convert" ? "convert" : "device";
+}
 
 export interface Toast {
   id: number;
@@ -261,7 +272,7 @@ export const useStore = create<State>((set, get) => ({
       const active = get().active;
       if (active?.device.serial === raw.serial) {
         get().toast("info", `${active.device.name} 已经连接了`);
-        set({ tab: "device" });
+        set({ tab: tabAfterConnect(get().tab) });
         return;
       }
       const viaBridge = get().devices.find(
@@ -278,7 +289,7 @@ export const useStore = create<State>((set, get) => ({
       const s = await session.connect(raw);
       set({
         active: { device: s.device, adb: s.adb, close: s.close },
-        tab: "device",
+        tab: tabAfterConnect(get().tab),
         busy: null,
       });
       get().toast("success", `已连接 ${s.device.name}`);
@@ -359,7 +370,7 @@ export const useStore = create<State>((set, get) => ({
           }
         });
       }
-      set({ busy: null, tab: "device" });
+      set({ busy: null, tab: tabAfterConnect(get().tab) });
       // Remember it so the next visit reconnects the same one without asking.
       localStorage.setItem(LAST_DEVICE_KEY, device.serial);
       await get().reloadInfo();

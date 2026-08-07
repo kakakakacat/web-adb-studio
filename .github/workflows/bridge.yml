@@ -85,7 +85,7 @@ jobs:
           mkdir -p dist
           cp "bridge/target/${{ matrix.target }}/release/${{ matrix.bin }}" "dist/${{ matrix.name }}"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.name }}
           path: dist/${{ matrix.name }}

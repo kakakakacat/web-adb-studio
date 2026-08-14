@@ -41,7 +41,7 @@ jobs:
             bin: adbstudio-bridge.exe
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install the Rust target
         run: rustup target add ${{ matrix.target }}

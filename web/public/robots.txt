@@ -3,4 +3,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://adb.kakacat.icu/sitemap.xml
+Sitemap: https://adb.kakacat.net/sitemap.xml

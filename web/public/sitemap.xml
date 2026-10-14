@@ -3,7 +3,7 @@
      流程手动更新即可 —— 内容变化频率低，写死比自动生成更省事。 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://adb.kakacat.icu/</loc>
+    <loc>https://adb.kakacat.net/</loc>
     <lastmod>2026-08-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>

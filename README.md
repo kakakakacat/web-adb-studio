@@ -3,7 +3,7 @@
 浏览器里直接跑 ADB —— 不用安装 `adb`，不用装任何客户端。ADB 协议由页面自己实现
 （基于 [Tango](https://github.com/yume-chan/ya-webadb)），通过 WebUSB 连上安卓设备。
 
-**在线使用：https://adb.kakacat.icu**
+**在线使用：https://adb.kakacat.net**
 
 需要支持 WebUSB 的浏览器（Chrome / Edge），且页面必须是 HTTPS 或 localhost。
 Safari 和 Firefox 不支持 WebUSB。

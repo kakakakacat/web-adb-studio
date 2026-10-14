@@ -11,7 +11,7 @@
 #   npx wrangler pages secret put DIAG_TOKEN --project-name adb-studio
 set -euo pipefail
 
-SITE="${DIAG_SITE:-https://adb.kakacat.icu}"
+SITE="${DIAG_SITE:-https://adb.kakacat.net}"
 TOKEN_FILE="${DIAG_TOKEN_FILE:-$HOME/.adbstudio-diag-token}"
 if [ -z "${DIAG_TOKEN:-}" ] && [ -f "$TOKEN_FILE" ]; then
   DIAG_TOKEN="$(tr -d '\n' < "$TOKEN_FILE")"

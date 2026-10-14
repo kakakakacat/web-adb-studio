@@ -8,9 +8,9 @@
 
 | 平台 | 文件 |
 | --- | --- |
-| macOS（Apple 芯片） | `https://adb.kakacat.icu/download/adbstudio-bridge-macos-arm64` |
-| Windows 10+ | `https://adb.kakacat.icu/download/adbstudio-bridge-windows-x64.exe` |
-| Linux x64（Ubuntu 18.04+） | `https://adb.kakacat.icu/download/adbstudio-bridge-linux-x64` |
+| macOS（Apple 芯片） | `https://adb.kakacat.net/download/adbstudio-bridge-macos-arm64` |
+| Windows 10+ | `https://adb.kakacat.net/download/adbstudio-bridge-windows-x64.exe` |
+| Linux x64（Ubuntu 18.04+） | `https://adb.kakacat.net/download/adbstudio-bridge-linux-x64` |
 
 运行后保持窗口开着，回网页点齿轮 →「用本机桥接」。浏览器会问一次「访问本地网络」，点允许。
 

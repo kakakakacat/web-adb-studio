@@ -10,7 +10,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-HOST="${HOST:-adb.kakacat.icu}"
+HOST="${HOST:-adb.kakacat.net}"
 # key 文件就是 public/ 下那个唯一的 32 位 hex .txt
 KEY="$(ls public/ | grep -E '^[0-9a-f]{32}\.txt$' | head -1 | sed 's/\.txt$//')"
 [ -n "$KEY" ] || { echo "error: public/ 下没有 IndexNow key 文件（<32位hex>.txt）" >&2; exit 1; }
@@ -36,7 +36,7 @@ done
 cat <<'NOTE'
 
 Google 没有免账号的提交接口，只能走 Search Console（需要登录）：
-  1. https://search.google.com/search-console 添加「网域」资源 adb.kakacat.icu
+  1. https://search.google.com/search-console 添加「网域」资源 adb.kakacat.net
   2. 它给一段 TXT 记录，加到 Cloudflare DNS
   3. 验证通过后在「站点地图」里提交 sitemap.xml
 NOTE

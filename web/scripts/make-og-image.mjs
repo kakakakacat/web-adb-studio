@@ -35,7 +35,7 @@ const HTML = `<!doctype html>
   <div class="brand"><div class="mark"></div><span>ADB Studio</span></div>
   <h1>浏览器直连安卓设备<br><em>不用装 adb，不用装客户端</em></h1>
   <p>投屏 · 装包 · 文件传输 · 实时日志 · HTTP / gRPC / WebSocket 抓包（应用层明文，无需 MITM 代理和证书）</p>
-  <div class="url">adb.kakacat.icu</div>
+  <div class="url">adb.kakacat.net</div>
 </body></html>`;
 
 const browser = await puppeteer.launch({

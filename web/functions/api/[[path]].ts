@@ -24,6 +24,21 @@
 //
 // 验证通过后，邮箱用自有头名 `x-adbstudio-user` 转发（原名会被下一跳剥掉），并附上
 // 共享密钥；后端只在密钥匹配时才采信这个头。
+//
+// ## adb.kakacat.net：kakacat.net 统一登录取代 Access
+//
+// .net 主机名上没有 Access，身份来自 kakacat.net 签发的 kc_session（ES256，公钥内置在
+// _lib/kakacat-sso.js，验签不过就不转发任何身份）。scope 含 adb 才算数：站长和
+// deepmirror.com 访客都有，后者进不了别的子站。没有身份时后端对内部功能一律 403，
+// 所以这里只需要把「去登录」那一跳（/api/auth/login）接到 kakacat.net。
+// .icu 主机名仍然走上面的 Access 验签，不变。
+
+import { ssoSession, ssoLoginUrl } from "../_lib/kakacat-sso.js";
+
+/** 站长在后端白名单里的邮箱（ADBSTUDIO_ACCESS_EMAILS）。 */
+const OWNER_EMAIL = "1046376300mod@gmail.com";
+
+const isNetHost = (host: string) => host === "kakacat.net" || host.endsWith(".kakacat.net");
 
 interface Env {
   /** tunnel 后面的后端主机名，例如 api-adb.kakacat.icu。 */
@@ -135,8 +150,25 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
   headers.set("Host", target.host);
 
   // 身份：验签通过才转发，且换成自有头名。
-  const jwt = ctx.request.headers.get("cf-access-jwt-assertion");
-  const email = jwt ? await verifiedEmail(jwt, ctx.env) : null;
+  let email: string | null = null;
+  if (isNetHost(incoming.hostname)) {
+    const session = await ssoSession(ctx.request, "adb");
+    if (session) email = session.owner ? OWNER_EMAIL : String(session.sub).toLowerCase();
+    // 未登录点「登录」：去 kakacat.net 登录，回来时再走一遍这里，后端按 redirect_url 送回原页面
+    if (!session && incoming.pathname === "/api/auth/login") {
+      return Response.redirect(ssoLoginUrl(incoming.toString()), 302);
+    }
+  } else {
+    const jwt = ctx.request.headers.get("cf-access-jwt-assertion");
+    email = jwt ? await verifiedEmail(jwt, ctx.env) : null;
+  }
+  // 登录态只在边缘这里用，别把它带进内网后端
+  const cookie = headers.get("Cookie");
+  if (cookie) {
+    const rest = cookie.split(";").filter((p) => p.trim().split("=")[0] !== "kc_session").join(";");
+    if (rest.trim()) headers.set("Cookie", rest);
+    else headers.delete("Cookie");
+  }
   if (email) headers.set("x-adbstudio-user", email);
   else headers.delete("x-adbstudio-user"); // 别让调用方自己塞一个进来
 

@@ -33,17 +33,17 @@
 // 所以这里只需要把「去登录」那一跳（/api/auth/login）接到 kakacat.net。
 // .icu 主机名仍然走上面的 Access 验签，不变。
 
-import { ssoSession, ssoChallenge } from "../_lib/kakacat-sso.js";
+import { ssoSession, ssoChallenge } from "./kakacat-sso.js";
 
 /** 站长在后端白名单里的邮箱（ADBSTUDIO_ACCESS_EMAILS）。 */
 const OWNER_EMAIL = "1046376300mod@gmail.com";
 
 const isNetHost = (host: string) => host === "kakacat.net" || host.endsWith(".kakacat.net");
 
-interface Env {
-  /** tunnel 后面的后端主机名，例如 api-adb.kakacat.icu。 */
+export interface Env {
+  /** tunnel 后面的后端主机名，例如 api-adb.kakacat.net。 */
   API_ORIGIN?: string;
-  /** 与后端 ADBSTUDIO_PROXY_SECRET 相同的值。Pages 的加密变量，不进仓库。 */
+  /** 与后端共享的密钥，后端只在它匹配时才采信 x-adbstudio-user。Worker secret，不进仓库。 */
   PROXY_SECRET?: string;
   /** Access 团队域，例如 example.cloudflareaccess.com。用于取验签公钥。 */
   ACCESS_TEAM_DOMAIN?: string;
@@ -51,7 +51,9 @@ interface Env {
   ACCESS_AUD?: string;
 }
 
-const DEFAULT_ORIGIN = "api-adb.kakacat.icu";
+// 旧值是 api-adb.kakacat.icu —— 那个域名已失效，而线上又没设 API_ORIGIN，
+// 于是 /api/* 全程 530。默认值必须是一个真的能解析的主机名。
+const DEFAULT_ORIGIN = "api-adb.kakacat.net";
 
 /** JWKS 缓存。公钥很少轮换，每个请求去拉一次是纯浪费。 */
 let jwks: { keys: JsonWebKey[]; fetchedAt: number } | null = null;
@@ -137,14 +139,14 @@ async function verifiedEmail(token: string, env: Env): Promise<string | null> {
   return payload.email?.trim().toLowerCase() || null;
 }
 
-export const onRequest: PagesFunction<Env> = async (ctx) => {
-  const incoming = new URL(ctx.request.url);
+export async function handleApi(request: Request, env: Env): Promise<Response> {
+  const incoming = new URL(request.url);
   const target = new URL(
     incoming.pathname + incoming.search,
-    `https://${ctx.env.API_ORIGIN ?? DEFAULT_ORIGIN}`
+    `https://${env.API_ORIGIN ?? DEFAULT_ORIGIN}`
   );
 
-  const headers = new Headers(ctx.request.headers);
+  const headers = new Headers(request.headers);
   // Host 跟着目标 URL 走（Workers 里手工设 Host 是无效的，路由由 URL 决定），
   // cloudflared 就是按 hostname 匹配 ingress 的。
   headers.set("Host", target.host);
@@ -152,7 +154,7 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
   // 身份：验签通过才转发，且换成自有头名。
   let email: string | null = null;
   if (isNetHost(incoming.hostname)) {
-    const session = await ssoSession(ctx.request, "adb");
+    const session = await ssoSession(request, "adb");
     if (session) email = session.owner ? OWNER_EMAIL : String(session.sub).toLowerCase();
     // 未登录点「登录」：去 kakacat.net，回来时再走一遍这里，后端按 redirect_url 送回原页面。
     // 主站的访问态只有 30 分钟，所以先试静默续签，续过一轮还不行才会落到登录页。
@@ -160,8 +162,8 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
       return Response.redirect(ssoChallenge(incoming.toString()), 302);
     }
   } else {
-    const jwt = ctx.request.headers.get("cf-access-jwt-assertion");
-    email = jwt ? await verifiedEmail(jwt, ctx.env) : null;
+    const jwt = request.headers.get("cf-access-jwt-assertion");
+    email = jwt ? await verifiedEmail(jwt, env) : null;
   }
   // 登录态只在边缘这里用，别把它带进内网后端
   const cookie = headers.get("Cookie");
@@ -173,18 +175,18 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
   if (email) headers.set("x-adbstudio-user", email);
   else headers.delete("x-adbstudio-user"); // 别让调用方自己塞一个进来
 
-  if (ctx.env.PROXY_SECRET) headers.set("x-adbstudio-proxy", ctx.env.PROXY_SECRET);
+  if (env.PROXY_SECRET) headers.set("x-adbstudio-proxy", env.PROXY_SECRET);
   // 这两个头由 Cloudflare 在**下一跳**重新计算；照抄过去会自相矛盾。
   headers.delete("cf-connecting-ip");
   headers.delete("x-forwarded-for");
 
   // WebSocket（/api/adb 是 adb 中继）不能当普通 fetch 处理：要把 101 和那对 socket
   // 原样传回去，否则升级会在这里被吃掉。
-  if (ctx.request.headers.get("Upgrade")?.toLowerCase() === "websocket") {
+  if (request.headers.get("Upgrade")?.toLowerCase() === "websocket") {
     const upstream = await fetch(target.toString(), {
-      method: ctx.request.method,
+      method: request.method,
       headers,
-      body: ctx.request.body,
+      body: request.body,
     });
     return new Response(upstream.body, {
       status: upstream.status,
@@ -195,12 +197,12 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
   }
 
   const upstream = await fetch(target.toString(), {
-    method: ctx.request.method,
+    method: request.method,
     headers,
     body:
-      ctx.request.method === "GET" || ctx.request.method === "HEAD"
+      request.method === "GET" || request.method === "HEAD"
         ? undefined
-        : ctx.request.body,
+        : request.body,
     redirect: "manual",
   });
 
@@ -209,4 +211,4 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
     statusText: upstream.statusText,
     headers: upstream.headers,
   });
-};
+}

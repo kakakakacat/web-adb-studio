@@ -6,8 +6,8 @@
 //   GET  /diag/stats?token=…  占用量与配额
 //
 // 为什么不在 /api/* 下：那个前缀整体转发给 tunnel 后面的内网后端
-// （functions/api/[[path]].ts），诊断报告不该往那儿去，它属于紧邻页面的这个
-// Function。放在 /diag 也就不受那条转发规则和 Cloudflare 侧任何 /api 改写的影响。
+// （src/worker/api-proxy.ts），诊断报告不该往那儿去，它属于紧邻页面的这个
+// Worker。放在 /diag 也就不受那条转发规则和 Cloudflare 侧任何 /api 改写的影响。
 //
 // ## 上传为什么不要身份
 //
@@ -16,8 +16,8 @@
 // 配额淘汰 —— 最坏情况下攻击者能做的是把库塞满，而塞满的结果只是最旧的报告被删掉，
 // 不会产生费用，也不会影响页面本身。查看侧就必须有 token 了。
 
-interface Env {
-  /** D1 binding，见 wrangler.toml。 */
+export interface DiagEnv {
+  /** D1 binding，见 cloudflare.config.ts。 */
   adbstudio_diag?: D1Database;
   /** 查看报告用的口令。没配 = 查看接口直接关闭（上传照常）。 */
   DIAG_TOKEN?: string;
@@ -167,7 +167,7 @@ async function throttled(db: D1Database, ipHash: string): Promise<string | null>
   return null;
 }
 
-function authorized(request: Request, env: Env): boolean {
+function authorized(request: Request, env: DiagEnv): boolean {
   if (!env.DIAG_TOKEN) return false;
   const url = new URL(request.url);
   const given = request.headers.get("x-diag-token") ?? url.searchParams.get("token") ?? "";
@@ -178,7 +178,7 @@ function authorized(request: Request, env: Env): boolean {
   return diff === 0;
 }
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+export async function handleDiagPost(request: Request, env: DiagEnv): Promise<Response> {
   const db = env.adbstudio_diag;
   if (!db) return text("诊断存储未配置（缺 D1 绑定）", 503);
 
@@ -226,14 +226,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     Number(env.DIAG_MAX_ROWS ?? MAX_ROWS),
   );
   return json({ id, stored: raw.length, evicted: after.deleted });
-};
+}
 
-export const onRequestGet: PagesFunction<Env> = async ({ request, env, params }) => {
+export async function handleDiagGet(request: Request, env: DiagEnv, parts: string[]): Promise<Response> {
   const db = env.adbstudio_diag;
   if (!db) return text("诊断存储未配置（缺 D1 绑定）", 503);
   if (!authorized(request, env)) return text("需要 token", 401);
 
-  const parts = (params.path as string[] | undefined) ?? [];
   const url = new URL(request.url);
 
   if (parts[0] === "stats") {
@@ -277,4 +276,4 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
         .bind(limit)
         .all();
   return json({ reports: listing.results });
-};
+}

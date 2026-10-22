@@ -109,12 +109,17 @@ cd server && cargo run     # :7070，提供 /api/adb 中继与静态托管
 
 ## 部署
 
-**Cloudflare Pages** —— 纯静态，全球边缘分发：
+**Cloudflare Worker + 静态资源** —— 全球边缘分发，`/api/*` 经 tunnel 转发到内网后端，
+`/diag/*` 就地处理：
 
 ```bash
-cd web
-CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… ./scripts/deploy-pages.sh
+cd web && npm run deploy          # typecheck + vite build + cf deploy
 ```
+
+2026-10 之前这是一个 Pages 项目，`/api` 和 `/diag` 是 Pages Functions。改成 Worker 的
+原因很实际：新的 `cf` CLI 不支持 Legacy Pages，而 wrangler 的登录态失效后这个站就
+**发不出版本**了 —— 线上 `/api/*` 一直 530（默认后端主机名指向已失效的 kakacat.icu），
+却改不掉。现在配置在 `web/cloudflare.config.ts`，密钥用 `cf secret put <名字>` 设。
 
 **自托管** —— `server/` 那个 Rust 服务同时提供静态托管和 `/api/adb` 中继，
 见 [server/DEPLOY.md](server/DEPLOY.md)（含 HTTPS / nginx / Docker）。

@@ -4,8 +4,9 @@
 # 装 APK（见 src/embed.ts）。那条通道本身已经按 origin 白名单校验过，这一行是第二道：
 # 连页面都嵌不进去，就更谈不上发消息。
 #
-# deepmirror.kakacat.net:8443（及旧域名 .icu）是 Dino 家具配置台所在的统一入口（带 :8443 是因为域名
-# 未备案，443 会被阿里云拦掉，见 deepmirror-portal/README.md）。
+# deepmirror.kakacat.net:8443 是 Dino 家具配置台所在的统一入口（带 :8443 是因为域名
+# 未备案，443 会被阿里云拦掉，见 deepmirror-portal/README.md）。旧域名 kakacat.icu
+# 已于 2026-10 彻底失效，不再列进来。
 # **端口不同就是不同的源**，所以这里必须把端口写出来。
 /*
-  Content-Security-Policy: frame-ancestors 'self' https://deepmirror.kakacat.net:8443 https://deepmirror.kakacat.icu:8443 http://localhost:* http://127.0.0.1:*
+  Content-Security-Policy: frame-ancestors 'self' https://deepmirror.kakacat.net:8443 http://localhost:* http://127.0.0.1:*

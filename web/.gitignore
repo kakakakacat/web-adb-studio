@@ -1,0 +1,5 @@
+
+# 构建时从 ../server/bridge-dist 拷进来的，不入库
+public/download/
+# cf 的构建产物
+.cloudflare/

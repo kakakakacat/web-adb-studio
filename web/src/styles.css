@@ -87,6 +87,26 @@ select {
   height: 100vh;
 }
 
+/* 嵌入模式（?embed=1，见 embed.ts）：这个页面是别人界面里的一栏。
+   收掉顶栏，侧栏压窄 —— 在一栏宽度里，288px 的侧栏会把画面挤没。
+   品牌条留着：嵌进去的人也该看得出这块画面是谁在提供、出问题找谁。 */
+.app.embed {
+  grid-template-columns: 200px 1fr;
+  grid-template-rows: 44px 1fr;
+}
+
+.app.embed .brand {
+  font-size: 13px;
+}
+
+/* 嵌入模式的顶栏：只剩状态 + 齿轮（连接方式 / 桥接）+ 断开。 */
+.topbar.embed-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .brand {
   grid-area: brand;
   display: flex;

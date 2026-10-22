@@ -38,6 +38,13 @@ import type { ScrcpyOptions } from "../types";
 /** Must match the version fetched by scripts/fetch-assets.sh. */
 export const SCRCPY_SERVER_VERSION = "3.3.3";
 const SCRCPY_SERVER_URL = "/scrcpy-server";
+/** 宿主页面可以改这个地址：投屏挂件（embed-mirror.ts）被别的站点内联时，
+ *  scrcpy-server 放在那个站点自己的源下（跨源取会被 CORS / 私有网络检查挡掉）。 */
+export function setScrcpyServerUrl(url: string): void {
+  serverUrl = url;
+}
+let serverUrl = SCRCPY_SERVER_URL;
+
 /** Where scrcpy itself puts the server jar. */
 const SERVER_PATH = "/data/local/tmp/scrcpy-server.jar";
 
@@ -99,7 +106,7 @@ export async function startMirror(
   onLog?: (line: string) => void
 ): Promise<MirrorSession> {
   // 1. Push the server jar (fetched from our own origin, no CDN).
-  const res = await fetch(SCRCPY_SERVER_URL);
+  const res = await fetch(serverUrl);
   if (!res.ok) {
     throw new Error(
       `缺少 scrcpy-server 资源（${res.status}）。请先运行 web/scripts/fetch-assets.sh。`

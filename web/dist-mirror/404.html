@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>找不到这个页面 · ADB Studio</title>
+    <style>
+      body {
+        margin: 0; min-height: 100vh; display: grid; place-items: center;
+        background: #0e1014; color: #eceef2; text-align: center;
+        font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+      }
+      a { color: #2dd4bf; }
+      p { color: #a8b0be; }
+    </style>
+  </head>
+  <body>
+    <!--
+      Pages 默认会把无法匹配的路径回退成 index.html（200 的 HTML）。这个应用把状态全放在
+      内存里、没有任何客户端路由，所以那种回退只会带来两个坏处：搜索引擎收录一堆假 200
+      的垃圾 URL，以及 /api/* 这类请求拿到一份 HTML 而不是一个明确的 404 —— 排查时极具
+      误导性。放一个 404.html 就能让 Pages 返回真正的 404。
+    -->
+    <div>
+      <h1>404</h1>
+      <p>这个地址不存在。</p>
+      <p><a href="/">回到 ADB Studio</a></p>
+    </div>
+  </body>
+</html>

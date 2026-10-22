@@ -33,7 +33,7 @@
 // 所以这里只需要把「去登录」那一跳（/api/auth/login）接到 kakacat.net。
 // .icu 主机名仍然走上面的 Access 验签，不变。
 
-import { ssoSession, ssoLoginUrl } from "../_lib/kakacat-sso.js";
+import { ssoSession, ssoChallenge } from "../_lib/kakacat-sso.js";
 
 /** 站长在后端白名单里的邮箱（ADBSTUDIO_ACCESS_EMAILS）。 */
 const OWNER_EMAIL = "1046376300mod@gmail.com";
@@ -154,9 +154,10 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
   if (isNetHost(incoming.hostname)) {
     const session = await ssoSession(ctx.request, "adb");
     if (session) email = session.owner ? OWNER_EMAIL : String(session.sub).toLowerCase();
-    // 未登录点「登录」：去 kakacat.net 登录，回来时再走一遍这里，后端按 redirect_url 送回原页面
+    // 未登录点「登录」：去 kakacat.net，回来时再走一遍这里，后端按 redirect_url 送回原页面。
+    // 主站的访问态只有 30 分钟，所以先试静默续签，续过一轮还不行才会落到登录页。
     if (!session && incoming.pathname === "/api/auth/login") {
-      return Response.redirect(ssoLoginUrl(incoming.toString()), 302);
+      return Response.redirect(ssoChallenge(incoming.toString()), 302);
     }
   } else {
     const jwt = ctx.request.headers.get("cf-access-jwt-assertion");

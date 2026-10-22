@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run typecheck && vite build",
+    "build:mirror": "vite build --config vite.mirror.config.ts",
     "typecheck": "tsc -p tsconfig.json",
     "preview": "vite preview",
     "assets": "bash scripts/fetch-assets.sh",

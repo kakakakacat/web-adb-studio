@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 单页应用，只有一个 URL。lastmod 在每次发布时由 scripts/deploy-nas.sh 之外的
+     流程手动更新即可 —— 内容变化频率低，写死比自动生成更省事。 -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://adb.kakacat.net/</loc>
+    <lastmod>2026-08-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

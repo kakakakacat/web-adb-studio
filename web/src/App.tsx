@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { isSplitDeployment, signIn } from "./api";
+import { initEmbedBridge, isEmbed } from "./embed";
 import { useStore, type Tab } from "./store";
 import { Apps } from "./ui/Apps";
 import { Convert } from "./ui/Convert";
@@ -45,6 +46,9 @@ export function App() {
   const signOut = useStore((s) => s.signOut);
   const refreshIdentity = useStore((s) => s.refreshIdentity);
   const [panel, setPanel] = useState<Panel>(null);
+  // 嵌入模式（?embed=1）：这个页面是别的工具里的一栏（见 embed.ts）。
+  // 只留「连设备 + 投屏」，顶栏那些页签在别人的界面里是干扰。
+  const embed = isEmbed();
   const [accountOpen, setAccountOpen] = useState(false);
   // Cloudflare Access logs you in silently once an IdP session exists, so this is
   // the only visible confirmation of which identity is in use.
@@ -66,6 +70,14 @@ export function App() {
   useEffect(() => {
     void init();
   }, [init]);
+
+  // 嵌入时的消息通道：上级把 APK 的字节递进来，这边装、并回报进度。
+  useEffect(() => initEmbedBridge(), []);
+
+  // 嵌进去就是为了看画面，别让它停在「设备」页上。
+  useEffect(() => {
+    if (embed) setTab("mirror");
+  }, [embed, setTab]);
 
   // Coming back from the sign-in/sign-out round trip often means a restore from
   // the back/forward cache: no reload, no init(), and whatever was on screen when
@@ -109,13 +121,33 @@ export function App() {
 
   return (
     <>
-      <div className="app">
+      <div className={embed ? "app embed" : "app"}>
         <div className="brand">
           <span className="dot" />
           ADB Studio
         </div>
 
-        <div className="topbar">
+        {/* 嵌入模式下顶栏收起，但「连接方式 / 环境自检」必须留一个入口：
+            桥接（ws://127.0.0.1 的本机桥接程序）就是在那个面板里配的，
+            而在不能用 WebUSB 的场合（上级页面是 http）桥接是唯一的路。
+            藏掉它等于把唯一的出路也藏了。 */}
+        {embed && (
+          <div className="topbar embed-bar">
+            <span className="muted">{active ? "已连接" : "未连接设备"}</span>
+            <div className="row">
+              <button className="btn sm ghost" onClick={() => setPanel("help")}
+                      title="连接方式（WebUSB / 本机桥接）/ 环境自检">
+                <Icon name="settings" />
+              </button>
+              {active && (
+                <button className="btn sm" onClick={() => void disconnect()} title="断开设备">
+                  <Icon name="power" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+        {!embed && <div className="topbar">
           <div className="tabs">
             {(active ? [...DEVICE_TABS, ...FREE_TABS] : FREE_TABS).map((t) => (
               <button
@@ -190,7 +222,7 @@ export function App() {
               </button>
             )}
           </div>
-        </div>
+        </div>}
 
         <Sidebar />
 

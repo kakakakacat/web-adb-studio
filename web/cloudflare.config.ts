@@ -3,7 +3,6 @@
 //
 // 密钥不在这里，用 `cf secret put <名字>` 单独设：
 //   PROXY_SECRET        与后端共享，后端只在它匹配时才采信转发过去的身份
-//   ACCESS_TEAM_DOMAIN  / ACCESS_AUD   非 kakacat.net 主机名上走 Cloudflare Access 验签时用
 //   DIAG_TOKEN          查看诊断报告的口令（没配 = 查看接口关闭，上传照常）
 //   DIAG_SALT           诊断报告里 ip_hash 的盐（没配就用固定值）
 import { bindings, defineConfig } from "cf/config";
@@ -31,8 +30,6 @@ export default defineConfig({
       }),
       ASSETS: bindings.assets(),
       PROXY_SECRET: bindings.secret(),
-      ACCESS_TEAM_DOMAIN: bindings.secret(),
-      ACCESS_AUD: bindings.secret(),
       DIAG_TOKEN: bindings.secret(),
       DIAG_SALT: bindings.secret(),
     },

@@ -29,6 +29,10 @@ export default defineConfig({
         id: "325f8eb9-9a04-4de0-8615-3d9b880dde63",
       }),
       ASSETS: bindings.assets(),
+      // ⚠️ 顺序要紧：`cf deploy` 会按这里的声明重建绑定，把**部署前**设好的 secret
+      // 重置成空占位。adb 的身份链路因此断过一次 —— 后端配了 proxy_secret 之后，
+      // 密钥对不上就直接当作"没有身份"，表现和没登录一模一样，很难看出是密钥问题。
+      // 所以：**每次 cf deploy 之后都要重设一遍 secret**，再验 /api/auth/whoami。
       PROXY_SECRET: bindings.secret(),
       DIAG_TOKEN: bindings.secret(),
       DIAG_SALT: bindings.secret(),

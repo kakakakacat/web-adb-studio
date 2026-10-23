@@ -17,7 +17,7 @@ import { errorMessage, type Device, type DeviceInfo } from "./types";
 
 // "convert" is the odd one out: it needs no device, so it stays reachable (and
 // stays put) whether or not one is connected.
-export type Tab = "device" | "apps" | "files" | "mirror" | "logcat" | "net" | "convert";
+export type Tab = "device" | "apps" | "files" | "mirror" | "convert";
 
 /**
  * Where to land after connecting. Always 设备 — except that yanking someone out

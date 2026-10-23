@@ -10,22 +10,18 @@ import { DeviceBusy } from "./ui/DeviceBusy";
 import { Files } from "./ui/Files";
 import { Help } from "./ui/Help";
 import { Icon } from "./ui/Icon";
-import { Logcat } from "./ui/Logcat";
 import { Mirror } from "./ui/Mirror";
-import { Net } from "./ui/Net";
 import { Sidebar } from "./ui/Sidebar";
 import { BusyOverlay, Toasts } from "./ui/Toasts";
 
 // "概览" and "工具" were each half a screen of facts and buttons, so they live
-// together on 设备. 投屏 and 日志 get their own pages because both want the full
-// height and neither fits the card-grid layout.
+// together on 设备. 投屏 gets its own page because it wants the full height and
+// does not fit the card-grid layout.
 const DEVICE_TABS: { key: Tab; label: string }[] = [
   { key: "device", label: "设备" },
   { key: "apps", label: "应用" },
   { key: "files", label: "文件" },
   { key: "mirror", label: "投屏" },
-  { key: "logcat", label: "日志" },
-  { key: "net", label: "抓包" },
 ];
 
 // 转码 works on local files with the browser's own codecs — no adb, no device.
@@ -258,14 +254,6 @@ export function App() {
             <Apps active={active} />
           ) : tab === "files" ? (
             <Files active={active} />
-          ) : tab === "logcat" ? (
-            // Keyed by serial so switching devices kills the old stream via the
-            // unmount cleanup rather than leaving it running.
-            <Logcat key={active.device.serial} active={active} />
-          ) : tab === "net" ? (
-            // Same reason as 日志, and here it matters more: an orphaned capture
-            // socket keeps the app's collector believing someone is subscribed.
-            <Net key={active.device.serial} active={active} />
           ) : (
             // Keyed by serial so switching devices unmounts the session and its
             // cleanup runs, instead of reusing a canvas bound to the old device.

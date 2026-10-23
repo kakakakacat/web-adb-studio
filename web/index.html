@@ -11,12 +11,12 @@
 
     <!-- SEO ------------------------------------------------------------------
       标题写「网页版 ADB」而不是单纯的产品名：会搜过来的人不知道这个工具叫什么，
-      他们搜的是想做的事（浏览器里用 adb / 不装 adb 投屏 / 安卓抓包）。
+      他们搜的是想做的事（浏览器里用 adb / 不装 adb 投屏 / 网页传文件到安卓）。
     -->
-    <title>ADB Studio · 网页版 ADB 工具：浏览器直连安卓设备，投屏 / 装包 / 日志 / 抓包</title>
+    <title>ADB Studio · 网页版 ADB 工具：浏览器直连安卓设备，投屏 / 装包 / 传文件</title>
     <meta
       name="description"
-      content="打开网页就能用 adb：浏览器通过 WebUSB 直连安卓设备，不用装 adb、不用装客户端。支持应用安装卸载、文件传输、scrcpy 投屏、实时 logcat，以及 HTTP / gRPC / WebSocket 抓包（应用层明文，不需要 MITM 代理和证书）。"
+      content="打开网页就能用 adb：浏览器通过 WebUSB 直连安卓设备，不用装 adb、不用装客户端。支持应用安装卸载、文件传输、scrcpy 投屏，以及本地视频转码。"
     />
     <link rel="canonical" href="https://adb.kakacat.net/" />
     <meta name="theme-color" content="#0f8b7e" />
@@ -28,7 +28,7 @@
     <meta property="og:title" content="ADB Studio · 网页版 ADB 工具" />
     <meta
       property="og:description"
-      content="浏览器直连安卓设备：投屏、装包、文件传输、实时日志、HTTP / gRPC / WebSocket 抓包。不用装 adb，不用装客户端。"
+      content="浏览器直连安卓设备：投屏、装包、文件传输。不用装 adb，不用装客户端。"
     />
     <meta property="og:image" content="https://adb.kakacat.net/og.png" />
     <meta property="og:image:width" content="1200" />
@@ -47,15 +47,13 @@
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "任何支持 WebUSB 的浏览器（Chrome、Edge）",
         "browserRequirements": "需要 WebUSB：Chrome 或 Edge，且页面必须是 HTTPS",
-        "description": "浏览器里直接跑 ADB 协议，不用安装 adb 或任何客户端。支持应用管理、文件传输、scrcpy 投屏、实时 logcat，以及应用层 HTTP / gRPC / WebSocket 抓包。",
+        "description": "浏览器里直接跑 ADB 协议，不用安装 adb 或任何客户端。支持应用管理、文件传输和 scrcpy 投屏。",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
         "featureList": [
           "浏览器通过 WebUSB 直连安卓设备，无需安装 adb",
           "应用安装 / 卸载 / 图标浏览",
           "文件拖拽传输",
-          "scrcpy 投屏（WebCodecs 硬解码）",
-          "实时 logcat 过滤",
-          "HTTP / gRPC / WebSocket 抓包，不需要 MITM 代理和证书"
+          "scrcpy 投屏（WebCodecs 硬解码）"
         ]
       }
     </script>
@@ -84,15 +82,6 @@
           <li><strong>文件传输</strong>：把文件拖到页面上就推到设备里。</li>
           <li>
             <strong>投屏</strong>：基于 scrcpy，H.264 / H.265 由 WebCodecs 硬解码，支持鼠标键盘触控。
-          </li>
-          <li><strong>实时日志</strong>：logcat 按进程和级别过滤。</li>
-          <li>
-            <strong>抓包</strong>：实时查看应用的 HTTP / gRPC / WebSocket 流量，而且是<strong
-              >应用层明文</strong
-            >（HTTPS 加密前 / 解密后），不需要 MITM 代理、不需要安装证书、不受 certificate
-            pinning 影响。gRPC 能看到 method、metadata、流式消息和 status，protobuf 显示真实字段名。
-            需要目标应用集成
-            <a href="https://github.com/kakakakacat/android-netcapture">netcapture SDK</a>。
           </li>
         </ul>
         <h2>浏览器要求</h2>

@@ -14,9 +14,7 @@ Safari 和 Firefox 不支持 WebUSB。
 - **应用管理** —— 已装应用列表（含真实启动器图标）、拖拽安装 APK、卸载
 - **文件传输** —— 拖到页面上就推进设备
 - **投屏** —— 基于 scrcpy，H.264/H.265 由 WebCodecs 硬解码，支持鼠标键盘触控、剪贴板
-- **实时日志** —— logcat 按进程和级别过滤
 - **性能采样** —— CPU / 内存 / 帧率
-- **抓包** —— 实时查看应用的 HTTP / gRPC / WebSocket 流量
 - **转码** —— 图片序列 → 动图 WebP / MP4，不用装 ffmpeg，也不需要连设备
 
 ## 转码（图片序列 → 动图 / 视频）
@@ -42,19 +40,6 @@ Safari 和 Firefox 不支持 WebUSB。
 其余参数跟着 `scripts/img2webp.sh` / `png2mp4.sh` 走：`-m 4`、20fps。验证：
 `npm run test:convert`（拿 `webpinfo` + libwebp 解码器逐像素回读，并和 `img2webp`
 比体积）、`npm run verify:convert`（真 Chrome 端到端跑一遍两条编码路径）。
-
-## 抓包
-
-抓的是**应用层**：HTTPS 在加密前 / 解密后的明文，gRPC 的 method、metadata、
-流式消息、status，protobuf 显示真实字段名。**不需要 MITM 代理、不需要安装证书、
-不受 certificate pinning 影响。**
-
-数据来自应用进程内的采集器，由构建期字节码插桩注入 —— 需要目标应用集成
-[netcapture SDK](https://github.com/kakakakacat/android-netcapture)（加一行 Gradle
-插件，业务代码零改动）。
-
-设备侧只开一个 abstract LocalSocket，网页通过已有的 adb 连接直接读它 ——
-不监听任何 TCP 端口，也不需要 `adb forward`（WebUSB 模式下电脑上根本没有 adb server）。
 
 ## 连不上时的诊断日志
 
@@ -137,7 +122,7 @@ cd web && npm run deploy          # typecheck + vite build + cf deploy
 ## 结构
 
 ```
-web/          前端（React + Tango）。ADB 协议、抓包面板、投屏解码都在这里
+web/          前端（React + Tango）。ADB 协议、投屏解码都在这里
 server/       Rust（axum）：WebSocket↔TCP 中继、静态托管、身份认证
 bridge/       独立的小中继，发给用户在自己机器上跑
 icon-helper/  安卓辅助应用，用于读取完全解析后的启动器图标（含自适应图标）
@@ -149,7 +134,6 @@ icon-helper/  安卓辅助应用，用于读取完全解析后的启动器图标
 
 ```bash
 npm run verify:ui          # 主要 UI 流程
-npm run verify:net         # 抓包面板（需要设备上跑着集成了 SDK 的 debug 包）
 npm run verify:static      # 线上部署自检
 npm run verify:bridge      # adb 协议层
 ```
